@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geoscience Globe — Phase 0 check</title>
+<style>
+  :root{
+    --ink:#1c2226; --muted:#5b6a72; --paper:#f1f4f5; --panel:#ffffff; --line:#d3dadd;
+    --accent:#0d6a86; --accent-ink:#ffffff; --ok:#1d7a45; --warn:#9a6200; --bad:#b3261e;
+    --ok-bg:#e3f3ea; --warn-bg:#fbefd3; --bad-bg:#f9e0dd; --neutral-bg:#e8edef;
+    --viewer:#0a1115; --hdr:96px;
+    --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font:15px/1.5 var(--sans);color:var(--ink);background:var(--paper)}
+  button,select,input,textarea{font:inherit;color:inherit}
+  :focus-visible{outline:3px solid #2a8fb0;outline-offset:2px}
+  h1{font-size:19px;margin:0;font-weight:650;letter-spacing:-.005em}
+  h2{font-size:17px;margin:0 0 .5rem;font-weight:650}
+  h3{font-size:15px;margin:1.4rem 0 .5rem;font-weight:650}
+  p{margin:.4rem 0 .8rem;max-width:72ch}
+  .muted{color:var(--muted)}
+  .hidden{display:none !important}
+
+  header{background:#14262e;color:#e9f1f4;padding:12px 20px 0;height:var(--hdr)}
+  header .sub{margin:2px 0 8px;color:#a8bcc4;font-size:13.5px}
+  nav{display:flex;gap:2px;margin-top:6px}
+  nav button{background:transparent;border:0;color:#b8cad1;padding:9px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:550}
+  nav button:hover{color:#fff;background:#1d3641}
+  nav button[aria-selected="true"]{background:var(--paper);color:var(--ink)}
+
+  main{min-height:calc(100% - var(--hdr))}
+  .page{padding:20px 24px 48px;max-width:1180px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 16px}
+
+  button.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer}
+  button.btn:hover{background:#0a5870}
+  button.btn.secondary{background:#fff;color:var(--ink);border:1px solid #aab6bb}
+  button.btn.secondary:hover{background:#eef2f3}
+  button.btn.danger{background:var(--bad)}
+  button.btn.small{padding:3px 10px;font-size:13px;font-weight:550}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  dl.kv{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:6px 16px;margin:0}
+  dl.kv dt{color:var(--muted)}
+  dl.kv dd{margin:0;font-variant-numeric:tabular-nums;word-break:break-word}
+  .tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12.5px;font-weight:600}
+  .tag.pass{background:var(--ok-bg);color:var(--ok)}
+  .tag.warn{background:var(--warn-bg);color:var(--warn)}
+  .tag.fail{background:var(--bad-bg);color:var(--bad)}
+  .tag.pending,.tag.run{background:var(--neutral-bg);color:var(--muted)}
+
+  table{border-collapse:collapse;width:100%}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.group td{background:#e9eef0;font-weight:650;padding:6px 10px}
+  .url{font:12px/1.4 var(--mono);color:var(--muted);word-break:break-all;margin-top:3px}
+  details summary{cursor:pointer;color:var(--accent);font-size:13px}
+  details pre{margin:6px 0 0;font:12px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;background:#f4f7f8;padding:8px;border-radius:6px}
+  .progress{height:6px;background:var(--neutral-bg);border-radius:4px;overflow:hidden;margin:10px 0}
+  .progress > div{height:100%;width:0;background:var(--accent);transition:width .2s}
+
+  /* ---------- engine tab ---------- */
+  #tab-engine{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - var(--hdr));min-height:520px}
+  #controls{background:var(--panel);border-right:1px solid var(--line);padding:14px 16px 24px;overflow:auto}
+  #controls label{display:block;font-weight:600;font-size:13.5px;margin:12px 0 4px}
+  #controls select,#controls input[type=text],#controls input[type=password],#controls textarea{width:100%;padding:6px 8px;border:1px solid #aab6bb;border-radius:6px;background:#fff}
+  #controls .check{display:flex;gap:8px;align-items:flex-start;font-weight:500;margin:8px 0}
+  #controls .check input{margin-top:4px}
+  #controls .row{display:flex;gap:8px;margin:14px 0 4px}
+  .hint{font-size:12.5px;color:var(--muted);margin:3px 0 0}
+  fieldset{border:1px solid var(--line);border-radius:8px;margin:12px 0 0;padding:6px 10px 10px}
+  legend{font-weight:600;font-size:13.5px;padding:0 4px}
+  .radio{display:flex;gap:8px;margin:4px 0}
+  #viewwrap{position:relative;background:var(--viewer);min-width:0}
+  #viewer{position:absolute;inset:0}
+  #hud{position:absolute;left:12px;top:12px;z-index:5;background:rgba(10,17,21,.82);color:#e8f0f3;padding:9px 12px;border-radius:8px;font:12.5px/1.55 var(--mono);pointer-events:none;min-width:230px}
+  #hud b{color:#fff;font-weight:600}
+  #hud .state{color:#8fd3ea;margin-bottom:3px;font-family:var(--sans);font-size:13px}
+  #log{margin-top:12px;font:12px/1.5 var(--mono);max-height:190px;overflow:auto;background:#f4f7f8;border:1px solid var(--line);border-radius:6px;padding:6px 8px;white-space:pre-wrap;word-break:break-word}
+  #log .bad{color:var(--bad)} #log .warn{color:var(--warn)}
+  #viewmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fb4bc;text-align:center;padding:24px;z-index:4}
+
+  .spark{display:block;margin-top:4px}
+  .flag{background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:6px 10px;margin:8px 0;font-size:14px}
+  .runhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+  textarea.md{width:100%;min-height:150px;font:12.5px/1.5 var(--mono);padding:8px;border:1px solid #aab6bb;border-radius:6px}
+
+  @media (max-width: 900px){
+    #tab-engine{grid-template-columns:1fr;grid-template-rows:auto 70vh;height:auto}
+    #controls{border-right:0;border-bottom:1px solid var(--line)}
+    dl.kv{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion: reduce){ .progress > div{transition:none} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Geoscience Globe — Phase 0 check</h1>
+  <p class="sub">Does each data source load, and can the globe engines hold up on this device? Run on the real student laptops, in Safari and in Chrome.</p>
+  <nav role="tablist" aria-label="Phase 0 sections">
+    <button role="tab" id="nav-env"      data-tab="env"      aria-selected="true">This device</button>
+    <button role="tab" id="nav-sources"  data-tab="sources"  aria-selected="false">Data sources</button>
+    <button role="tab" id="nav-cesium"   data-tab="cesium"   aria-selected="false">Cesium globe</button>
+    <button role="tab" id="nav-maplibre" data-tab="maplibre" aria-selected="false">MapLibre globe</button>
+    <button role="tab" id="nav-results"  data-tab="results"  aria-selected="false">Results <span id="runcount"></span></button>
+  </nav>
+</header>
+
+<main>
+  <!-- ===================== THIS DEVICE ===================== -->
+  <section id="tab-env" class="page">
+    <h2>This device</h2>
+    <p class="muted">Read straight from the browser. Safari hides the exact macOS version, so note it by hand in the test conditions on either globe tab.</p>
+    <div class="card"><dl class="kv" id="env-core"></dl></div>
+    <h3>Graphics (WebGL)</h3>
+    <div class="card"><dl class="kv" id="env-gl"></dl></div>
+    <h3>Next step</h3>
+    <p>Open <b>Data sources</b> and run all checks, then try each globe with the scripted test. Results from every run are collected under <b>Results</b>, ready to copy into notes.</p>
+  </section>
+
+  <!-- ===================== DATA SOURCES ===================== -->
+  <section id="tab-sources" class="page hidden">
+    <h2>Data sources</h2>
+    <p>Each source is requested the way the globe would request it: from this page, across origins, then decoded as an image or parsed as data. A source that fails here would fail in the finished app.</p>
+    <div class="card">
+      <button class="btn" id="btn-runall">Run all checks</button>
+      <span id="src-status" class="muted" style="margin-left:12px"></span>
+      <div class="progress"><div id="src-bar"></div></div>
+      <p class="hint">Requests skip the browser cache so timings reflect the real network. Sources marked “verify” came from memory and may need a URL fix in <code>config.js</code>.</p>
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <table id="src-table">
+        <thead><tr><th>Source</th><th>Status</th><th>Result</th><th class="num">Median</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== ENGINE (Cesium / MapLibre) ===================== -->
+  <section id="tab-engine" class="hidden">
+    <aside id="controls" aria-label="Test controls">
+      <div id="engine-title" style="font-weight:650;font-size:16px"></div>
+
+      <div id="row-body">
+        <label for="ctl-body">Body</label>
+        <select id="ctl-body">
+          <option value="earth">Earth</option>
+          <option value="moon">Moon</option>
+          <option value="mars">Mars</option>
+        </select>
+      </div>
+
+      <label for="ctl-imagery">Imagery</label>
+      <select id="ctl-imagery"></select>
+      <p class="hint" id="imagery-hint"></p>
+
+      <div id="row-terrain">
+        <label class="check"><input type="checkbox" id="ctl-terrain"> <span>Terrain (3D relief), exaggerated 1.5×</span></label>
+      </div>
+      <div id="row-token" class="hidden">
+        <label for="ctl-token">Cesium ion token (needed for Cesium terrain)</label>
+        <input type="password" id="ctl-token" autocomplete="off" placeholder="paste a domain-restricted token">
+        <p class="hint">Free at cesium.com. Stays in this browser only. Never put a token in the repository.</p>
+      </div>
+      <label class="check"><input type="checkbox" id="ctl-quakes"> <span>Earthquake dots (USGS live feed)</span></label>
+      <label class="check" id="row-macro"><input type="checkbox" id="ctl-macro"> <span>Geologic map overlay (Macrostrat)</span></label>
+
+      <fieldset>
+        <legend>Performance profile</legend>
+        <label class="radio"><input type="radio" name="profile" value="lite" checked> <span><b>Lite</b> — draws only when something changes, coarser tiles, no extras</span></label>
+        <label class="radio"><input type="radio" name="profile" value="full"> <span><b>Full</b> — continuous drawing, finer tiles, lighting, antialiasing</span></label>
+      </fieldset>
+
+      <label for="ctl-dpr">Render sharpness</label>
+      <select id="ctl-dpr">
+        <option value="native">Native (full Retina)</option>
+        <option value="1.5">1.5× (middle)</option>
+        <option value="1">1× (lowest cost)</option>
+      </select>
+
+      <label for="ctl-duration">Test length</label>
+      <select id="ctl-duration">
+        <option value="0">One pass (about 1.5 minutes)</option>
+        <option value="180000">3 minutes</option>
+        <option value="600000">10 minutes (heat check)</option>
+        <option value="1200000">20 minutes (full heat soak)</option>
+      </select>
+      <p class="hint">Changing any setting above rebuilds the globe. The test flies a fixed route and records speed at every stop. Keep this tab in front while it runs.</p>
+
+      <details style="margin-top:12px">
+        <summary>Test conditions (saved with each run)</summary>
+        <label for="cond-device">Device label</label>
+        <input type="text" id="cond-device" placeholder="e.g. Neo #4, Rm 112">
+        <label for="cond-os">macOS version</label>
+        <input type="text" id="cond-os" placeholder="Apple menu › About This Mac">
+        <label for="cond-power">Plugged in?</label>
+        <select id="cond-power"><option>Unknown</option><option>Plugged in</option><option>On battery</option></select>
+        <label for="cond-lpm">Low Power Mode</label>
+        <select id="cond-lpm"><option>Unknown</option><option>Off</option><option>On</option></select>
+        <label for="cond-net">Network</label>
+        <input type="text" id="cond-net" placeholder="e.g. school Wi-Fi, 25 students on">
+        <label for="cond-other">Other tabs and apps open</label>
+        <input type="text" id="cond-other" placeholder="e.g. Google Docs, Meet">
+        <label for="cond-notes">Notes</label>
+        <textarea id="cond-notes" rows="2"></textarea>
+      </details>
+
+      <div class="row">
+        <button class="btn" id="btn-start">Start test</button>
+        <button class="btn secondary" id="btn-stop" disabled>Stop</button>
+      </div>
+      <div class="row" style="margin-top:2px">
+        <button class="btn secondary small" id="btn-view-results">View results</button>
+      </div>
+      <div id="log" role="log" aria-live="polite"></div>
+    </aside>
+
+    <div id="viewwrap">
+      <div id="viewer"></div>
+      <div id="hud" class="hidden">
+        <div class="state" id="hud-state">Idle</div>
+        <div>Drawing speed <b id="hud-fps">–</b> frames/s <span class="muted">(0 = nothing to redraw)</span></div>
+        <div>Last frame <b id="hud-ms">–</b> ms</div>
+        <div>Elapsed <b id="hud-elapsed">–</b></div>
+        <div>Tile errors <b id="hud-errors">0</b> · requests <b id="hud-req">0</b></div>
+        <div>JS memory <b id="hud-heap">n/a</b></div>
+      </div>
+      <div id="viewmsg">Loading…</div>
+    </div>
+  </section>
+
+  <!-- ===================== RESULTS ===================== -->
+  <section id="tab-results" class="page hidden">
+    <h2>Results</h2>
+    <p class="muted">Every test run in this browser session. Reloading the page clears them, so copy or download before closing.</p>
+    <div class="card">
+      <button class="btn secondary" id="btn-copy-md">Copy as Markdown</button>
+      <button class="btn secondary" id="btn-copy-json">Copy as JSON</button>
+      <button class="btn secondary" id="btn-dl-json">Download JSON</button>
+      <span id="export-status" class="muted" style="margin-left:10px"></span>
+    </div>
+    <div id="runs"><p class="muted">No runs yet. Open a globe tab and press Start test.</p></div>
+    <h3>Markdown preview</h3>
+    <textarea class="md" id="md-preview" readonly aria-label="Markdown summary"></textarea>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
