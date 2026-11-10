@@ -257,8 +257,9 @@ async function ensureMapLibre() {
 /* ------------------------------------------------------------------- meter */
 const Meter = {
   run: null, active: null, last: null, recent: [], t0: 0, binMs: 30000, bins: new Map(),
-  errors: 0, reqTotal: 0, bytesTotal: 0, reqBase: 0, bytesBase: 0,
-  begin(run) { this.run = run; this.t0 = performance.now(); this.bins = new Map(); this.active = null; this.last = null; this.reqBase = this.reqTotal; this.bytesBase = this.bytesTotal; this.errors = 0; },
+  errors: 0, errorKinds: new Map(), httpBad: new Map(), reqTotal: 0, bytesTotal: 0, reqBase: 0, bytesBase: 0,
+  begin(run) { this.run = run; this.t0 = performance.now(); this.bins = new Map(); this.active = null; this.last = null; this.reqBase = this.reqTotal; this.bytesBase = this.bytesTotal; this.resetErrors(); },
+  resetErrors() { this.errors = 0; this.errorKinds = new Map(); this.httpBad = new Map(); },
   end() { this.active = null; this.last = null; },
   phase(name) {
     const m = this.run.phaseMap;
@@ -286,12 +287,26 @@ const Meter = {
 
 try {
   new PerformanceObserver((list) => {
-    for (const e of list.getEntries()) { Meter.reqTotal++; Meter.bytesTotal += (e.transferSize || e.encodedBodySize || 0); }
+    for (const e of list.getEntries()) {
+      Meter.reqTotal++; Meter.bytesTotal += (e.transferSize || e.encodedBodySize || 0);
+      // Chrome reports each response's HTTP status (Safari does not); tally failures by host as a cross-check.
+      if (e.responseStatus >= 400) {
+        const key = `${new URL(e.name).host} · HTTP ${e.responseStatus}`;
+        Meter.httpBad.set(key, (Meter.httpBad.get(key) || 0) + 1);
+      }
+    }
   }).observe({ type: 'resource', buffered: false });
 } catch (e) { /* resource timing not available: request counts will show 0 */ }
 
-function noteError(msg) {
+// source: config id (or engine part); reason: short cause such as "HTTP 503"; where: optional tile or URL.
+function noteError(msg, source = 'unknown', reason = 'unknown', where = null) {
   Meter.errors++;
+  const key = source + '|' + reason;
+  const t = Meter.run ? Math.round((performance.now() - Meter.t0) / 1000) : null;
+  const k = Meter.errorKinds.get(key) || { source, reason, count: 0, firstS: t, lastS: t, examples: [] };
+  k.count++; k.lastS = t;
+  if (where && k.examples.length < 3) k.examples.push(where);
+  Meter.errorKinds.set(key, k);
   if (Meter.errors <= 15) elog(msg, 'bad');
   if (Meter.errors === 16) elog('Further errors are counted but not listed.', 'warn');
 }
@@ -358,7 +373,13 @@ async function createCesium(cfg) {
       url: templateUrl(src), maximumLevel: src.maxZoom, credit: src.credit, tileWidth: src.tileSize || 256, tileHeight: src.tileSize || 256,
       tilingScheme: src.scheme === 'geographic' ? new C.GeographicTilingScheme({ ellipsoid: ell }) : new C.WebMercatorTilingScheme({ ellipsoid: ell }),
     });
-    p.errorEvent.addEventListener((e) => { noteError(`Tile error (${src.id}): ${(e && e.message) || 'request failed'}`); e.retry = false; });
+    p.errorEvent.addEventListener((e) => {
+      const code = e && e.error && e.error.statusCode;
+      const reason = code ? 'HTTP ' + code : (e && e.error && e.error.message) || 'request failed, no status (network, CORS, or bad image)';
+      const where = e && e.level != null ? `z${e.level}/${e.x}/${e.y}` : null;
+      noteError(`Tile error (${src.id}) ${where || ''}: ${reason}`, src.id, reason, where);
+      e.retry = false;
+    });
     return p;
   };
   const base = srcById(cfg.imagery);
@@ -371,7 +392,7 @@ async function createCesium(cfg) {
     else {
       C.Ion.defaultAccessToken = cfg.token;
       const terrain = C.Terrain.fromWorldTerrain();
-      terrain.errorEvent.addEventListener((e) => noteError('Terrain error: ' + ((e && e.message) || e)));
+      terrain.errorEvent.addEventListener((e) => { const m = (e && e.message) || String(e); noteError('Terrain error: ' + m, 'cesium-terrain', m); });
       scene.setTerrain(terrain); scene.verticalExaggeration = 1.5;
     }
   }
@@ -384,7 +405,7 @@ async function createCesium(cfg) {
         en.point = new C.PointGraphics({ pixelSize: 3 + (mag || 2) * 1.6, color: C.Color.fromCssColorString('#ff5a36').withAlpha(0.85) });
       });
       return viewer.dataSources.add(ds);
-    }).catch((e) => { if (!viewer.isDestroyed()) noteError('Earthquake feed error: ' + e.message); });
+    }).catch((e) => { if (!viewer.isDestroyed()) noteError('Earthquake feed error: ' + e.message, 'usgs-eq', e.message); });
   }
 
   const R = ell.maximumRadius;
@@ -461,7 +482,12 @@ async function createMapLibre(cfg) {
   const map = new maplibregl.Map(mapOpts);
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
   map.on('render', () => Meter.tick());
-  map.on('error', (e) => noteError('Map error: ' + ((e && e.error && e.error.message) || 'unknown')));
+  const mlSource = { base: cfg.imagery, macro: 'macrostrat-tiles', dem: 'aws-terrain', quakes: 'usgs-eq' };
+  map.on('error', (e) => {
+    const err = (e && e.error) || {};
+    const reason = err.status ? 'HTTP ' + err.status : err.message || 'unknown';
+    noteError(`Map error (${(e && e.sourceId) || 'map'}): ${reason}`, mlSource[e && e.sourceId] || (e && e.sourceId) || 'map', reason, err.url || null);
+  });
 
   return {
     kind: 'maplibre', version: CFG.maplibreVersion,
@@ -520,7 +546,7 @@ async function rebuild() {
   const msg = $('#viewmsg'); msg.classList.remove('hidden'); msg.textContent = 'Loading ' + (E.kind === 'cesium' ? 'Cesium' : 'MapLibre') + '…';
   $('#hud').classList.add('hidden');
   const cfg = readCfg(); E.cfg = cfg;
-  Meter.errors = 0;
+  Meter.resetErrors();
   try {
     const adapter = await (E.kind === 'cesium' ? createCesium(cfg) : createMapLibre(cfg));
     if (id !== E.buildId) { adapter.destroy(); return; }
@@ -630,6 +656,8 @@ function finishRun(run, elapsedMs, heapStart) {
     durationS: elapsedMs / 1000, renderedFrames: dts.length, avgFps: dts.length ? 1000 / (sum / dts.length) : null,
     p95FrameMs: pct(dts, 95), p99FrameMs: pct(dts, 99), maxFrameMs: max || null,
     stalls: phases.reduce((a, p) => a + p.stalls, 0), tileErrors: Meter.errors,
+    errorBreakdown: [...Meter.errorKinds.values()].sort((a, b) => b.count - a.count),
+    httpErrorsByHost: Object.fromEntries([...Meter.httpBad.entries()].sort((a, b) => b[1] - a[1])),
     requests: Meter.reqTotal - Meter.reqBase, bytesTransferredKnown: Meter.bytesTotal - Meter.bytesBase,
     settleMedianMs: median(settles), settleMaxMs: settles.length ? Math.max(...settles) : null, settleTimeouts: timeouts,
     heapStartMB: heapStart, heapEndMB: performance.memory ? performance.memory.usedJSHeapSize / 1048576 : null,
@@ -637,7 +665,14 @@ function finishRun(run, elapsedMs, heapStart) {
   };
   run.phases = phases; run.bins = bins;
   delete run.phaseMap; delete run.allDts; delete run.t0;
-  if (run.summary.tileErrors > 0) run.flags.push(`${run.summary.tileErrors} tile/data error(s) occurred during this run; imagery may be incomplete.`);
+  if (run.summary.tileErrors > 0) {
+    const top = run.summary.errorBreakdown[0];
+    run.flags.push(`${run.summary.tileErrors} tile/data error(s) occurred during this run; imagery may be incomplete. Most common: ${top.source}, ${top.reason} (${top.count}).`);
+  }
+  // MapLibre treats a missing tile (HTTP 404) as empty and reports no error, so check the browser's own tally too.
+  const httpFails = Object.values(run.summary.httpErrorsByHost).reduce((a, n) => a + n, 0);
+  run.summary.httpFailures = httpFails;
+  if (httpFails > run.summary.tileErrors) run.flags.push(`The browser saw ${httpFails} failed request(s) (HTTP 400+), more than the engine reported. See "Errors by source".`);
   if (run.summary.settleTimeouts > 0) run.flags.push(`${run.summary.settleTimeouts} stop(s) did not finish loading within ${CFG.settleTimeoutMs / 1000} s.`);
   if (throttle && throttle.flagged) run.flags.push(`Possible heat throttling: speed fell from ${fmt(throttle.firstFps)} to ${fmt(throttle.lastFps)} frames/s over the run.`);
   if (!dts.length) run.flags.push('No frames were drawn during the flights, so speed could not be measured. The window was probably minimized or covered; rerun with the page in front.');
@@ -674,6 +709,16 @@ function sparkline(bins) {
   svg.append(pl); return svg;
 }
 
+// One line per kind of error, plus Chrome's per-host HTTP failures when they exist.
+function errorLines(s) {
+  const out = (s.errorBreakdown || []).map((k) => `${k.source}: ${k.reason} × ${k.count}` +
+    (k.firstS != null ? ` (from ${mmss(k.firstS * 1000)} to ${mmss(k.lastS * 1000)})` : '') +
+    (k.examples.length ? ` e.g. ${k.examples.join(', ')}` : ''));
+  const hosts = Object.entries(s.httpErrorsByHost || {});
+  if (hosts.length) out.push('HTTP failures seen by the browser: ' + hosts.map(([h, n]) => `${h} × ${n}`).join('; '));
+  return out;
+}
+
 function runTitle(r) {
   const eng = r.engine === 'cesium' ? 'Cesium' : 'MapLibre';
   const len = typeof r.config.lengthMin === 'number' ? r.config.lengthMin + ' min' : 'one pass';
@@ -693,6 +738,7 @@ function renderResults() {
     add('Setup', `${r.config.imagery}${r.config.terrain ? ' + terrain' : ''}${r.config.quakes ? ' + quakes' : ''}${r.config.macrostrat ? ' + geologic map' : ''}; sharpness ${r.config.sharpness === 'native' ? 'native' : r.config.sharpness + '×'}`);
     add('Drawing speed while moving', `${fmt(s.avgFps)} frames/s average · 95% of frames faster than ${fmt(s.p95FrameMs)} ms · worst ${fmt(s.maxFrameMs, 0)} ms`);
     add('Stalls (gaps over 1 s)', String(s.stalls));
+    if (s.tileErrors || s.httpFailures) add('Errors by source', errorLines(s).join('\n'));
     add('Time to finish loading a view', s.settleMedianMs != null ? `${fmt(s.settleMedianMs / 1000)} s median, ${fmt(s.settleMaxMs / 1000)} s longest` + (s.settleTimeouts ? `, ${s.settleTimeouts} timed out` : '') : 'no data');
     add('Network', `${s.requests} requests` + (s.bytesTransferredKnown ? `, at least ${(s.bytesTransferredKnown / 1048576).toFixed(1)} MB (sizes of cross-origin files are often hidden)` : ''));
     add('JS memory', s.heapStartMB != null ? `${fmt(s.heapStartMB, 0)} → ${fmt(s.heapEndMB, 0)} MB` : 'n/a (Chrome only; GPU memory cannot be read)');
@@ -721,6 +767,11 @@ function toMarkdown() {
   for (const r of RUNS) {
     const s = r.summary;
     lines.push(`| ${r.id} | ${r.engine} | ${r.config.body} | ${r.config.profile} | ${r.config.sharpness} | ${typeof r.config.lengthMin === 'number' ? r.config.lengthMin + ' min' : '1 pass'} | ${fmt(s.avgFps)} | ${fmt(s.p95FrameMs)} | ${s.stalls} | ${fmt(s.settleMedianMs != null ? s.settleMedianMs / 1000 : null)} | ${s.tileErrors} | ${r.flags.map((f) => f.replace(/\|/g, '/')).join(' ')} |`);
+  }
+  const withErrors = RUNS.filter((r) => r.summary.tileErrors || r.summary.httpFailures);
+  if (withErrors.length) {
+    lines.push('', '### Errors by source');
+    for (const r of withErrors) lines.push('', `Run ${r.id}:`, ...errorLines(r.summary).map((l) => '- ' + l));
   }
   const src = [...SRC_STATE.entries()];
   if (src.length) {

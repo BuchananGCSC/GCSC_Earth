@@ -50,6 +50,7 @@ Keep the browser tab in front while a test runs; background tabs are slowed by t
 - **Frames/s while moving** is measured only during the camera flights. In Lite mode the globe draws only when something changes, so the on-screen counter shows 0 while it is idle. That is intended.
 - **Load time per visit** is how long a view took to finish loading its tiles after the camera arrived. This mostly reflects network and tile-server speed. About 0.6 s is the floor (the check waits briefly, then needs three loaded readings in a row), so 0.6 s means "already loaded".
 - **Stalls** are gaps of more than a second between drawn frames during a flight.
+- **Errors by source** lists each kind of tile or data error in a run: which source, the reason (for example HTTP 429 or 503), how many, when in the run, and a few example tiles. In Chrome it also lists failed requests the browser saw per server; MapLibre stays silent about missing tiles (HTTP 404), so that tally is the only place they show. Safari does not report HTTP statuses to the page, so that cross-check is Chrome-only.
 - **Possible heat throttling** is flagged when speed in the last minute of a 3+ minute run is more than 20% below the first minute.
 - **JS memory** appears in Chrome only. GPU memory cannot be read from a web page.
 
