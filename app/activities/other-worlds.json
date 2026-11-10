@@ -1,0 +1,115 @@
+{
+  "title": "Other worlds: craters and giant volcanoes",
+  "minutes": 20,
+  "summary": "Compare the Moon and Mars with Earth.",
+  "standards": [],
+  "stops": [
+    {
+      "title": "An impact crater",
+      "body": "moon",
+      "base": "lro",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -11.4,
+        "lat": -43.3,
+        "range": 500000,
+        "pitch": -60
+      },
+      "text": "The Moon is covered in craters. Each one formed when a rock from space hit the surface at very high speed. The impact blasted out a bowl and threw broken rock in every direction.\n\nThis crater is Tycho. Look for three things: the raised rim around the edge, the flat floor, and the mountain in the middle, called the central peak.",
+      "questions": [
+        "Use the ↔ measure button to measure Tycho from rim to rim. How wide is it?",
+        "Describe what you see inside the crater and just outside its rim."
+      ]
+    },
+    {
+      "title": "Dark plains and bright highlands",
+      "body": "moon",
+      "base": "lro",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -15,
+        "lat": 33,
+        "range": 2200000,
+        "pitch": -90
+      },
+      "text": "The dark areas you can see from Earth are called maria. They are wide plains of lava that flooded low ground long ago and hardened. The bright areas are the highlands.\n\nCraters pile up over time. A surface that has been there longer has been hit more often.",
+      "questions": [
+        "Which has more craters: the dark plains or the bright highlands?",
+        "Which surface is older? Explain your reasoning."
+      ]
+    },
+    {
+      "title": "A crater on Earth",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -68.7,
+        "lat": 51.38,
+        "range": 350000,
+        "pitch": -90
+      },
+      "text": "Earth gets hit too. This ring-shaped lake in Quebec, Canada, fills what is left of the Manicouagan crater. The impact that made it happened about 215 million years ago.\n\nCraters are hard to find on Earth. Rain, rivers, ice and moving plates wear them away or bury them. The Moon has no air, no liquid water and no moving plates.",
+      "questions": [
+        "Use the ↔ measure button to measure across the ring lake. How does it compare with Tycho?",
+        "Why does the Moon still show billions of years of craters when Earth shows so few?"
+      ]
+    },
+    {
+      "title": "Earth's tallest volcano",
+      "body": "earth",
+      "base": "bm",
+      "layers": [],
+      "terrain": true,
+      "view": {
+        "lon": -155.5,
+        "lat": 19.6,
+        "range": 500000,
+        "pitch": -50
+      },
+      "text": "The Big Island of Hawaii is made of five volcanoes joined together. The tallest, Mauna Kea, rises about 4,200 meters above the sea. Its base is on the sea floor, about 6,000 meters below the waves. Measured from base to top it is more than 10 kilometers tall, which is taller than Mount Everest.\n\nHawaii's volcanoes grow over a hotspot. But the plate keeps moving, so each volcano is carried away from the hotspot and stops growing.",
+      "questions": [
+        "Use the ↔ measure button to measure across the Big Island at its widest. How wide is it?"
+      ]
+    },
+    {
+      "title": "The biggest volcano in the solar system",
+      "body": "mars",
+      "base": "viking",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -134,
+        "lat": 18.65,
+        "range": 1800000,
+        "pitch": -60
+      },
+      "text": "This is Olympus Mons on Mars. It stands about 22 kilometers high. That is about twice the height of Mauna Kea measured from the sea floor.\n\nUnder Picture, choose \"Heights in color\" to see its shape more clearly. Then switch back.\n\nMars has no moving plates. A volcano there can stay over the same hot spot for a very long time while lava piles up in one place. Mars also has weaker gravity than Earth, so a tall mountain can hold itself up more easily.",
+      "questions": [
+        "Use the ↔ measure button to measure across Olympus Mons, from cliff edge to cliff edge. How wide is it? About how many Big Islands would fit across it?",
+        "Give two reasons a volcano on Mars can grow so much bigger than one on Earth."
+      ]
+    },
+    {
+      "title": "A canyon as long as a country",
+      "body": "mars",
+      "base": "viking",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -65,
+        "lat": -11,
+        "range": 4500000,
+        "pitch": -90
+      },
+      "text": "Valles Marineris is a system of canyons along the equator of Mars. In places it is about 7 kilometers deep. For comparison, the Grand Canyon is about 450 kilometers long and less than 2 kilometers deep.\n\nA river carved the Grand Canyon. Valles Marineris is different. Scientists think the crust of Mars stretched and cracked open here, and landslides and other erosion widened the cracks later.",
+      "questions": [
+        "Use the ↔ measure button to measure Valles Marineris from end to end. How long is it? About how many Grand Canyons long is that?",
+        "Earth, the Moon and Mars all have craters and volcanoes. Name one thing about Earth that makes its surface change faster than the other two."
+      ]
+    }
+  ]
+}

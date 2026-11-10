@@ -1,0 +1,22 @@
+{
+  "activities": [
+    {
+      "id": "volcanoes-hotspots",
+      "title": "Volcanoes and hotspots",
+      "minutes": 20,
+      "summary": "Why volcanoes are where they are."
+    },
+    {
+      "id": "rocks-geologic-maps",
+      "title": "Rocks and geologic maps",
+      "minutes": 20,
+      "summary": "Read a geologic map, starting in Indiana."
+    },
+    {
+      "id": "other-worlds",
+      "title": "Other worlds: craters and giant volcanoes",
+      "minutes": 20,
+      "summary": "Compare the Moon and Mars with Earth."
+    }
+  ]
+}

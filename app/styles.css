@@ -74,6 +74,36 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 #share-url { width: 100%; margin-top: 8px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); font-size: 12.5px; }
 .credits-note { padding-top: 10px; }
 
+/* ------------------------------------------------------------ activities */
+.act-list { display: flex; flex-direction: column; gap: 6px; }
+.act-list button { text-align: left; padding: 8px 10px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel-2); }
+.act-list button:hover { border-color: var(--accent); }
+.act-list b { display: block; }
+.act-list span { font-size: 12.5px; color: var(--muted); }
+#act-panel { background: var(--panel-2); margin: 10px -14px 0; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+h2.act-title { font-size: 17px; text-transform: none; letter-spacing: 0; color: var(--text); margin: 2px 0 8px; outline: none; }
+#act-body p { margin: 0 0 8px; }
+#act-body .q { font-weight: 600; margin-top: 12px; }
+#act-body textarea, #act-body input[type=text], #act-export { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); font: inherit; resize: vertical; }
+#act-body .review { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
+#act-body .review .a { color: var(--muted); white-space: pre-wrap; }
+#act-body .review .a.empty { color: var(--warn); }
+.act-buttons { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.act-buttons button:not(.primary) { padding: 8px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); }
+.act-buttons button:disabled { opacity: .45; cursor: default; }
+.act-links { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 10px; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; font-size: 13.5px; }
+#act-export { margin-top: 8px; font-size: 12.5px; }
+#app.in-activity #sec-acts, #app.in-activity #sec-world { display: none; }
+
+#measure { left: 50%; bottom: 64px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 14px; }
+#measure button { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); }
+#nav button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+#globe.measuring canvas { cursor: crosshair; }
+#info ul.units { margin: 8px 0 0; padding-left: 18px; font-size: 13.5px; }
+#info ul.units li { margin-top: 4px; }
+
 /* ------------------------------------------------------------ globe area */
 #stage { position: relative; flex: 1; min-width: 0; }
 #globe { position: absolute; inset: 0; }

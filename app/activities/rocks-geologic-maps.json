@@ -1,0 +1,107 @@
+{
+  "title": "Rocks and geologic maps",
+  "minutes": 20,
+  "summary": "Read a geologic map, starting in Indiana.",
+  "standards": [],
+  "stops": [
+    {
+      "title": "Reading a geologic map",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "geo.70"
+      ],
+      "terrain": false,
+      "view": {
+        "lon": -86.15,
+        "lat": 39.8,
+        "range": 700000,
+        "pitch": -90
+      },
+      "text": "A geologic map colors the ground by the rock found there. Each color stands for rock of a certain kind and age.\n\nClick anywhere on the map. A card tells you the rock's name, its type, and how old it is.\n\nIn much of Indiana the top layer is loose sand, gravel and clay left behind by ice sheets. The card often lists that first. The solid rock underneath, called bedrock, is then listed under \"Other maps of this spot also show.\"\n\nThe See-through slider under Geologic map lets you compare the colors with the land.",
+      "questions": [
+        "Click three places in Indiana that have different colors. For each one, write the rock's name, type and age."
+      ]
+    },
+    {
+      "title": "Older rock and younger rock",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "geo.70"
+      ],
+      "terrain": false,
+      "view": {
+        "lon": -86.4,
+        "lat": 38.6,
+        "range": 450000,
+        "pitch": -90
+      },
+      "text": "Indiana's bedrock began as layers of mud, sand and shells on the floor of shallow seas, long before the dinosaurs. The layers are not all the same age.\n\nUse Find a place to go to Madison, Indiana, in the southeast corner of the state. Click the map there. Then do the same for Evansville, Indiana, in the southwest corner. Look for the bedrock in each card.",
+      "questions": [
+        "What age is the bedrock near Madison? What age is it near Evansville? Which is older?",
+        "Indiana's coal is mined in the southwest. Coal forms from plants that grew in swamps. What does that tell you about southwestern Indiana when that rock formed?"
+      ]
+    },
+    {
+      "title": "Indiana limestone",
+      "body": "earth",
+      "base": "usgs",
+      "layers": [
+        "geo.30"
+      ],
+      "terrain": false,
+      "view": {
+        "lon": -86.52,
+        "lat": 38.895,
+        "range": 14000,
+        "pitch": -90
+      },
+      "text": "The towns of Bedford and Oolitic, Indiana, are surrounded by limestone quarries. Look for the pale, bare patches of ground north of Bedford. Stone cut here was used for the Empire State Building, the Pentagon and many Indiana courthouses.\n\nLimestone is a sedimentary rock. It forms in warm, shallow seas from the shells and skeletons of sea animals.",
+      "questions": [
+        "Click the map near a quarry. Find the limestone in the card. What age is it?",
+        "What was this part of Indiana like when the limestone formed? What is your evidence?"
+      ]
+    },
+    {
+      "title": "Layers in the Grand Canyon",
+      "body": "earth",
+      "base": "usgs",
+      "layers": [
+        "geo.50"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -112.12,
+        "lat": 36.08,
+        "range": 60000,
+        "pitch": -40
+      },
+      "text": "The Colorado River has cut more than a kilometer and a half down through flat layers of rock. Layers pile up over time, so in a stack of layers the ones at the bottom were laid down first.\n\nClick the rock up on the flat rim. Then click the rock at the very bottom, beside the river.",
+      "questions": [
+        "How old is the rock on the rim? How old is the rock at the bottom by the river?",
+        "Does that fit the rule that lower layers are older? Explain."
+      ]
+    },
+    {
+      "title": "Brand-new rock",
+      "body": "earth",
+      "base": "s2",
+      "layers": [
+        "geo.50"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -155.5,
+        "lat": 19.6,
+        "range": 300000,
+        "pitch": -60
+      },
+      "text": "Not all rock forms in layers under the sea. Igneous rock forms when melted rock cools and hardens. On the Big Island of Hawaii, lava is still adding new rock today.\n\nClick several places on the island.",
+      "questions": [
+        "What type of rock is the island made of, and how old is it? How does that compare with Indiana's bedrock?",
+        "Indiana's bedrock is sedimentary and Hawaii's is igneous. In your own words, how does each kind form?"
+      ]
+    }
+  ]
+}

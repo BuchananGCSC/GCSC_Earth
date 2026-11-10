@@ -28,6 +28,9 @@ const APP = {
     credit: 'Macrostrat (CC-BY 4.0)',
   },
 
+  // The list of activities (guided tours). Each activity is its own JSON file; see docs/activities.md.
+  activitiesIndex: 'activities/index.json',
+
   // Elevation for 3D terrain (Earth only). No key needed.
   terrain: {
     url: 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png',
@@ -130,6 +133,10 @@ const WORLDS = {
         url: 'https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm/{z}/{y}/{x}.jpg',
         note: 'Photos from NASA\'s Lunar Reconnaissance Orbiter, joined into one map of the whole Moon.',
         credit: 'NASA/GSFC/Arizona State University (LRO WAC), via NASA Trek', license: 'Public domain; credit NASA' },
+      { id: 'lola', name: 'Heights in color', kind: 'tiles', scheme: 'geographic', maxZoom: 5,
+        url: 'https://trek.nasa.gov/tiles/Moon/EQ/LRO_LOLA_ClrShade_Global_128ppd_v04/1.0.0/default/default028mm/{z}/{y}/{x}.png',
+        note: 'Colors show how high the ground is: blue and purple are low, green and yellow are in between, red and white are high.',
+        credit: 'NASA/GSFC (LRO LOLA), via NASA Trek', license: 'Public domain; credit NASA' },
     ],
     overlays: [],
     places: [
@@ -151,6 +158,10 @@ const WORLDS = {
         url: 'https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg',
         note: 'Color photos from NASA\'s Viking orbiters, joined into one map of the whole planet.',
         credit: 'NASA/JPL/USGS (Viking MDIM 2.1), via NASA Trek', license: 'Public domain; credit NASA' },
+      { id: 'mola', name: 'Heights in color', kind: 'tiles', scheme: 'geographic', maxZoom: 7,
+        url: 'https://trek.nasa.gov/tiles/Mars/EQ/Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg',
+        note: 'Colors show how high the ground is: blue is low, green and yellow are in between, red and white are high.',
+        credit: 'NASA/JPL/GSFC (MGS MOLA), via NASA Trek', license: 'Public domain; credit NASA' },
     ],
     overlays: [],
     places: [

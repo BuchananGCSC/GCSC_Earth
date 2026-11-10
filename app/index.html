@@ -16,12 +16,33 @@
     </header>
 
     <div class="panel-body">
-      <section aria-labelledby="h-world">
+      <section id="sec-acts" aria-labelledby="h-acts" hidden>
+        <h2 id="h-acts">Activities</h2>
+        <div id="act-list" class="act-list"></div>
+      </section>
+
+      <section id="act-panel" aria-labelledby="act-title" hidden>
+        <p class="fine" id="act-progress"></p>
+        <h2 id="act-title" class="act-title" tabindex="-1"></h2>
+        <div id="act-body"></div>
+        <div class="act-buttons">
+          <button type="button" id="act-back">Back</button>
+          <button type="button" id="act-next" class="primary">Next</button>
+        </div>
+        <div class="act-links">
+          <button type="button" id="act-view" class="linkish">Go back to this stop's view</button>
+          <button type="button" id="act-leave" class="linkish">Leave the activity</button>
+        </div>
+        <p id="act-msg" class="fine" role="status"></p>
+        <textarea id="act-export" readonly hidden aria-label="Your answers" rows="6"></textarea>
+      </section>
+
+      <section id="sec-world" aria-labelledby="h-world">
         <h2 id="h-world">World</h2>
         <div id="worlds" class="segmented" role="group" aria-labelledby="h-world"></div>
       </section>
 
-      <section aria-labelledby="h-find">
+      <section id="sec-find" aria-labelledby="h-find">
         <h2 id="h-find">Find a place</h2>
         <form id="search-form" autocomplete="off">
           <input id="search-box" type="search" aria-label="Place name" placeholder="Mount Everest" maxlength="80">
@@ -76,12 +97,20 @@
       <button type="button" data-nav="turn-left"  aria-label="Turn left"  title="Turn left">&#x21BA;</button>
       <button type="button" data-nav="turn-right" aria-label="Turn right" title="Turn right">&#x21BB;</button>
       <span class="gap"></span>
+      <button type="button" data-nav="measure" aria-label="Measure a distance" title="Measure a distance" aria-pressed="false">&#x2194;</button>
+      <span class="gap"></span>
       <button type="button" data-nav="north" aria-label="Put north at the top" title="North at the top">N</button>
       <button type="button" data-nav="home"  aria-label="Show the whole globe" title="Show the whole globe">&#x25CE;</button>
       <button type="button" data-nav="help"  aria-label="How to move" title="How to move">?</button>
     </div>
 
     <div id="readout" aria-hidden="true"></div>
+
+    <div id="measure" class="card" role="status" hidden>
+      <span id="measure-text"></span>
+      <button type="button" id="measure-again">Measure again</button>
+      <button type="button" id="measure-done">Done</button>
+    </div>
 
     <div id="info" class="card" role="dialog" aria-labelledby="info-title" hidden>
       <button type="button" id="info-close" class="icon-btn" aria-label="Close">&times;</button>
@@ -95,7 +124,7 @@
         <li><b>Drag</b> to spin the globe.</li>
         <li><b>Scroll with two fingers</b> to zoom in and out.</li>
         <li><b>Hold Control and drag</b> to tilt.</li>
-        <li>Or use the <b>buttons on the right</b>.</li>
+        <li>Or use the <b>buttons on the right</b>. The &#x2194; button measures a distance.</li>
       </ul>
       <button type="button" id="hint-close" class="primary">Got it</button>
     </div>

@@ -6,7 +6,7 @@ of geology layers. Static site, no accounts, no build step.
 - **Live site:** https://buchanangcsc.github.io/GCSC_Earth/
 - **Benchmark page (Phase 0):** https://buchanangcsc.github.io/GCSC_Earth/phase0/
 
-## What it does (Phase 1)
+## What it does
 
 - Earth, Moon and Mars, switched from the panel.
 - Earth pictures: a cloud-free view, a sharper satellite view, US aerial photos, and a recent daily satellite image.
@@ -17,12 +17,17 @@ of geology layers. Static site, no accounts, no build step.
 - On-screen zoom, tilt and turn buttons for trackpads.
 - "Copy link to this view": the link reopens the same world, view and layers. This is how students hand in a view.
 - Lite quality by default; "Sharper picture" is optional.
+- A distance-measure tool (the ↔ button), on all three worlds.
+- **Activities:** guided tours with a reading and questions at each stop. Students copy or download their answers
+  at the end. Three so far: volcanoes and hotspots, rocks and geologic maps, and other worlds. To write more,
+  see [docs/activities.md](docs/activities.md).
 
 ## Privacy
 
 Nothing is stored on a server. The only thing a student types that leaves the browser is the text in the place
-search box, which goes to OpenStreetMap's search service. The browser remembers one thing: that the
-"How to move" hint was dismissed.
+search box, which goes to OpenStreetMap's search service. Activity answers and the student's name stay in the
+browser tab until the student copies or downloads them, and are cleared when the tab closes. The browser also
+remembers that the "How to move" hint was dismissed.
 
 ## Run it locally
 

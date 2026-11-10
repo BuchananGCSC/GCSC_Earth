@@ -26,6 +26,8 @@
   /* ------------------------------------------------------------ state + link */
   // overlays: Map of overlay id -> opacity (0-100). view: camera position or null (= starting view).
   const state = { body: 'earth', base: null, overlays: new Map(), terrain: false, quality: 'lite', view: null };
+  // An activity named in the link, waiting to be opened: { id, stop (1-based), keepView }.
+  let linkActivity = null;
 
   const world = () => WORLDS[state.body];
   const byId = (list, id) => list.find((x) => x.id === id);
@@ -50,6 +52,9 @@
     state.view = (v.length === 5 && v.every(Number.isFinite))
       ? { lon: clamp(v[0], -180, 180), lat: clamp(v[1], -90, 90), height: clamp(v[2], 100, 1e9), heading: v[3], pitch: clamp(v[4], -90, 90) }
       : null;
+    const actId = p.get('act') || '';
+    linkActivity = /^[a-z0-9-]{1,60}$/.test(actId)
+      ? { id: actId, stop: Math.max(1, parseInt(p.get('stop'), 10) || 1), keepView: !!state.view } : null;
   }
 
   function linkText() {
@@ -65,6 +70,7 @@
     }
     if (state.terrain) p.push('terrain=1');
     if (state.quality === 'full') p.push('q=full');
+    if (act.def) p.push('act=' + act.def.id, 'stop=' + (act.i + 1));
     return '#' + p.join('&');
   }
 
@@ -213,6 +219,8 @@
     if (viewer) { try { viewer.destroy(); } catch (e) { /* already gone */ } viewer = null; }
     live = { base: null, overlays: new Map() };
     closeInfo();
+    measure.prims = null; measure.pts = [];
+    if (measure.on) setMeasure(true);
 
     const w = world(), q = APP.quality[state.quality];
     ell = w.radii === 'MOON' ? C.Ellipsoid.MOON : Array.isArray(w.radii) ? new C.Ellipsoid(...w.radii) : C.Ellipsoid.WGS84;
@@ -384,11 +392,11 @@
   }
 
   /* ------------------------------------------------------------ camera moves */
-  function flyTo(lon, lat, range, pitchDeg, done) {
+  function flyTo(lon, lat, range, pitchDeg, done, headingDeg = 0) {
     const target = C.Cartesian3.fromDegrees(lon, lat, 0, ell);
     viewer.camera.flyToBoundingSphere(new C.BoundingSphere(target, 1), {
       duration: reduceMotion ? 0 : 2.5,
-      offset: new C.HeadingPitchRange(0, rad(pitchDeg), range),
+      offset: new C.HeadingPitchRange(rad(headingDeg), rad(pitchDeg), range),
       complete: done,
     });
   }
@@ -429,6 +437,7 @@
     'tilt-down': () => orbit({ dPitch: rad(-15) }),
     'turn-left': () => orbit({ dHeading: rad(-20) }),
     'turn-right':() => orbit({ dHeading: rad(20) }),
+    'measure':   () => setMeasure(!measure.on),
     'north':     () => orbit({ heading: 0 }),
     'home':      () => flyHome(),
     'help':      () => { $('#hint').hidden = false; $('#hint-close').focus(); },
@@ -473,6 +482,7 @@
 
   let lookupSeq = 0;
   function onClick(pos) {
+    if (measure.on) { measureClick(pos); return; }
     const picked = viewer.scene.pick(pos);
     const d = picked && picked.id && picked.id.kind ? picked.id : null;
     if (d && d.kind === 'quake') {
@@ -511,19 +521,29 @@
           showInfo('Rock at this spot', [['Location', fmtLatLon(lat, lon)]], [el('p', { text: 'The map has no rock information here. Try a spot on land.' })]);
           return;
         }
-        const u = units[0];
-        const age = (u.b_int_name && u.t_int_name)
-          ? (u.b_int_name === u.t_int_name ? u.b_int_name : `${u.b_int_name} to ${u.t_int_name}`) : null;
         const ma = (v) => v >= 1 ? num(Math.round(v)) + ' million' : num(Math.round(v * 1e6));
-        const years = (u.b_int_age != null && u.t_int_age != null) ? `About ${ma(u.b_int_age)} to ${ma(u.t_int_age)} years old` : null;
+        const ageName = (u) => (u.b_int_name && u.t_int_name)
+          ? (u.b_int_name === u.t_int_name ? u.b_int_name : `${u.b_int_name} to ${u.t_int_name}`) : null;
+        const ageYears = (u) => (u.b_int_age != null && u.t_int_age != null) ? `about ${ma(u.b_int_age)} to ${ma(u.t_int_age)} years old` : null;
+        const rockType = (u) => (u.lith || '').replace(/^Major:\{|\}$/g, '').replace(/,(?=\S)/g, ', ');
+        const u = units[0];
         const desc = (u.descrip || '').trim();
-        const others = [...new Set(units.slice(1).map((x) => x.name).filter((n) => n && n !== u.name))].slice(0, 2);
+        // Different maps of the same spot can show different things: often loose sand, gravel or
+        // soil on top, and the solid rock underneath. List the others so students can find the bedrock.
+        const seen = new Set([u.name]), others = [];
+        for (const x of units.slice(1)) {
+          if (!x.name || seen.has(x.name) || others.length >= 3) continue;
+          seen.add(x.name);
+          others.push(el('li', { text: [x.name, rockType(x), [ageName(x), ageYears(x)].filter(Boolean).join(', ')].filter(Boolean).join(' — ') }));
+        }
+        const years = ageYears(u);
         showInfo('Rock at this spot', [
-          ['Name', u.name || u.strat_name], ['Rock type', (u.lith || '').replace(/^Major:\{|\}$/g, '')],
-          ['Age', age], ['', years], ['Location', fmtLatLon(lat, lon)],
+          ['Name', u.name || u.strat_name], ['Rock type', rockType(u)],
+          ['Age', ageName(u)], ['', years ? years[0].toUpperCase() + years.slice(1) : null], ['Location', fmtLatLon(lat, lon)],
         ], [
           desc ? el('p', { text: desc.length > 320 ? desc.slice(0, 320).replace(/\s+\S*$/, '') + '…' : desc }) : null,
-          others.length ? el('p', { class: 'fine', text: 'Other maps of this spot also show: ' + others.join('; ') + '.' }) : null,
+          others.length ? el('p', { class: 'fine', text: 'Other maps of this spot also show:' }) : null,
+          others.length ? el('ul', { class: 'units' }, ...others) : null,
           el('p', { class: 'fine', text: 'Source: ' + APP.rockLookup.credit }),
         ]);
       })
@@ -531,6 +551,228 @@
         if (seq !== lookupSeq) return;
         showInfo('Rock at this spot', [['Location', fmtLatLon(lat, lon)]], [el('p', { text: 'The rock lookup did not answer. Try again in a moment.' })]);
       });
+  }
+
+  /* ------------------------------------------------------------ measure a distance */
+  const measure = { on: false, pts: [], prims: null };
+  function clearMeasureGraphics() {
+    if (measure.prims && viewer && !viewer.isDestroyed()) {
+      for (const p of measure.prims) viewer.scene.primitives.remove(p);
+      viewer.scene.requestRender();
+    }
+    measure.prims = null;
+  }
+  function setMeasure(on) {
+    measure.on = on; measure.pts = [];
+    clearMeasureGraphics();
+    $('#globe').classList.toggle('measuring', on);
+    $('[data-nav=measure]').setAttribute('aria-pressed', String(on));
+    $('#measure').hidden = !on;
+    $('#measure-text').textContent = 'Click the first place on the globe.';
+    $('#measure-again').hidden = true;
+    if (on) closeInfo();
+  }
+  function measureClick(pos) {
+    const hit = groundAt(pos);
+    if (!hit) return;
+    if (measure.pts.length >= 2) { measure.pts = []; clearMeasureGraphics(); }
+    const c = C.Cartographic.fromCartesian(hit, ell); c.height = 0;
+    measure.pts.push(c);
+    const scene = viewer.scene;
+    if (!measure.prims) {
+      measure.prims = [scene.primitives.add(new C.PolylineCollection()), scene.primitives.add(new C.PointPrimitiveCollection())];
+    }
+    const [lines, dots] = measure.prims;
+    dots.add({ position: C.Cartesian3.fromRadians(c.longitude, c.latitude, 0, ell), pixelSize: 9,
+      color: C.Color.WHITE, outlineColor: C.Color.BLACK, outlineWidth: 2 });
+    if (measure.pts.length === 1) {
+      $('#measure-text').textContent = 'Now click the second place.';
+    } else {
+      try {
+        const g = new C.EllipsoidGeodesic(measure.pts[0], measure.pts[1], ell);
+        const path = [];
+        for (let i = 0; i <= 64; i++) {
+          const q = g.interpolateUsingFraction(i / 64);
+          path.push(C.Cartesian3.fromRadians(q.longitude, q.latitude, 0, ell));
+        }
+        lines.add({ positions: path, width: 3, material: C.Material.fromType('Color', { color: C.Color.WHITE }) });
+        const km = g.surfaceDistance / 1000;
+        $('#measure-text').textContent = 'Distance: ' + (km < 10 ? km.toFixed(1) : num(Math.round(km))) + ' km';
+      } catch (e) {
+        $('#measure-text').textContent = 'Those two places are too far apart to measure. Try again.';
+      }
+      $('#measure-again').hidden = false;
+    }
+    scene.requestRender();
+  }
+
+  /* ------------------------------------------------------------ activities (guided tours)
+     An activity is a JSON file: a list of stops, each with a view, layers, a short
+     reading and questions. Answers stay in this browser tab until the student copies
+     or downloads them. See docs/activities.md for the file format. */
+  let actIndex = [];
+  const act = { def: null, i: 0, review: false };
+  let answers = {};                                  // { activityId: { name, a: { "stop.question": text } } }
+  try { answers = JSON.parse(sessionStorage.getItem('gg-answers') || '{}') || {}; } catch (e) { answers = {}; }
+  const saveAnswers = () => { try { sessionStorage.setItem('gg-answers', JSON.stringify(answers)); } catch (e) { /* kept in memory only */ } };
+  const myAnswers = () => (answers[act.def.id] = answers[act.def.id] || { name: '', a: {} });
+  const questionsOf = (stop) => Array.isArray(stop.questions) ? stop.questions.map(String) : [];
+
+  async function loadActivities() {
+    try {
+      const idx = await getJson(APP.activitiesIndex);
+      actIndex = (idx.activities || []).filter((a) => a && /^[a-z0-9-]{1,60}$/.test(a.id) && a.title);
+    } catch (e) { actIndex = []; }
+    const box = $('#act-list'); box.textContent = '';
+    for (const a of actIndex) {
+      box.append(el('button', { type: 'button', onclick: () => startActivity(a.id, 1, false) },
+        el('b', { text: a.title }),
+        el('span', { text: [a.minutes ? `About ${a.minutes} minutes` : null, a.summary].filter(Boolean).join(' · ') })));
+    }
+    $('#sec-acts').hidden = !actIndex.length;
+  }
+
+  async function startActivity(id, stopNo, keepView) {
+    if (!actIndex.some((a) => a.id === id)) { banner('That activity is not on this site.'); return; }
+    let def;
+    try { def = await getJson(APP.activitiesIndex.replace(/[^/]*$/, '') + id + '.json'); }
+    catch (e) { banner('That activity could not be loaded. Check the internet connection.'); return; }
+    if (!def || !Array.isArray(def.stops) || !def.stops.length) { banner('That activity has no stops yet.'); return; }
+    act.def = Object.assign({}, def, { id });
+    act.i = clamp(stopNo - 1, 0, def.stops.length - 1); act.review = false;
+    $('#app').classList.add('in-activity');
+    $('#act-panel').hidden = false;
+    renderStop();
+    if (!keepView) applyStop(); else writeLink();
+  }
+
+  function leaveActivity() {
+    act.def = null; act.review = false;
+    $('#app').classList.remove('in-activity');
+    $('#act-panel').hidden = true;
+    renderAll(); writeLink();
+  }
+
+  // Put the globe the way the current stop asks: world, picture, layers, terrain, view.
+  function applyStop() {
+    const st = act.def.stops[act.i];
+    const body = WORLDS[st.body] ? st.body : state.body, w = WORLDS[body];
+    const base = byId(w.base, st.base) ? st.base : (body === state.body ? state.base : w.base[0].id);
+    const wanted = new Map();
+    for (const item of Array.isArray(st.layers) ? st.layers : []) {
+      const [id, op] = String(item).split('.');
+      const d = byId(w.overlays, id);
+      if (d && wanted.size < APP.maxOverlays) wanted.set(id, clamp(Number(op) || d.opacity || 100, 10, 100));
+    }
+    const terrain = !!st.terrain && !!w.hasTerrain;
+    if (body !== state.body) {
+      Object.assign(state, { body, base, overlays: wanted, terrain, view: null });
+      buildViewer();
+    } else {
+      if (base !== state.base) setBase(base);
+      for (const id of [...state.overlays.keys()]) if (!wanted.has(id)) removeOverlay(id);
+      state.overlays = wanted;
+      for (const [id, op] of wanted) {
+        const entry = live.overlays.get(id);
+        if (!entry) addOverlay(id); else if (entry.layer) entry.layer.alpha = op / 100;
+      }
+      if (terrain !== state.terrain) { state.terrain = terrain; applyTerrain(); }
+    }
+    renderAll();
+    const v = st.view || {};
+    if (Number.isFinite(v.lon) && Number.isFinite(v.lat)) {
+      flyTo(v.lon, v.lat, Number.isFinite(v.range) ? v.range : homeHeight(), Number.isFinite(v.pitch) ? clamp(v.pitch, -90, -10) : -90,
+        undefined, Number.isFinite(v.heading) ? v.heading : 0);
+    } else flyHome();
+    writeLink();
+  }
+
+  function answersText() {
+    const d = act.def, mine = myAnswers(), out = [];
+    out.push(`Geoscience Globe: ${d.title}`);
+    out.push(`Name: ${mine.name || ''}`);
+    out.push(`Date: ${new Date().toLocaleDateString('en-US', { dateStyle: 'long' })}`);
+    d.stops.forEach((st, si) => {
+      const qs = questionsOf(st);
+      if (!qs.length) return;
+      out.push('', `Stop ${si + 1}: ${st.title || ''}`);
+      qs.forEach((q, qi) => out.push(`Q: ${q}`, `A: ${(mine.a[`${si}.${qi}`] || '').trim() || '(no answer)'}`));
+    });
+    return out.join('\n') + '\n';
+  }
+
+  function renderStop() {
+    const d = act.def, n = d.stops.length, mine = myAnswers();
+    const body = $('#act-body'); body.textContent = '';
+    $('#act-msg').textContent = ''; $('#act-export').hidden = true;
+    if (act.review) {
+      $('#act-progress').textContent = d.title;
+      $('#act-title').textContent = 'Your answers';
+      body.append(el('p', { text: 'Check your answers. Then copy or download them and hand them in the way your teacher asked.' }));
+      body.append(el('p', { class: 'q', text: 'Your name' }),
+        el('input', { type: 'text', maxlength: 80, value: mine.name || '', 'aria-label': 'Your name', autocomplete: 'off',
+          oninput: (ev) => { mine.name = ev.target.value; saveAnswers(); } }));
+      d.stops.forEach((st, si) => questionsOf(st).forEach((q, qi) => {
+        const a = (mine.a[`${si}.${qi}`] || '').trim();
+        body.append(el('div', { class: 'review' },
+          el('p', { class: 'fine', text: `Stop ${si + 1}: ${st.title || ''}` }),
+          el('p', { text: q }),
+          el('p', { class: 'a' + (a ? '' : ' empty'), text: a || 'No answer yet.' })));
+      }));
+      body.append(el('div', { class: 'act-buttons' },
+        el('button', { type: 'button', class: 'primary', text: 'Copy my answers', onclick: copyAnswers }),
+        el('button', { type: 'button', text: 'Download my answers', onclick: downloadAnswers })));
+    } else {
+      const st = d.stops[act.i];
+      $('#act-progress').textContent = `${d.title} · Stop ${act.i + 1} of ${n}`;
+      $('#act-title').textContent = st.title || `Stop ${act.i + 1}`;
+      for (const para of String(st.text || '').split(/\n\s*\n/)) if (para.trim()) body.append(el('p', { text: para.trim() }));
+      questionsOf(st).forEach((q, qi) => {
+        const key = `${act.i}.${qi}`;
+        const box = el('textarea', { rows: 3, maxlength: 2000, 'aria-label': 'Your answer', placeholder: 'Type your answer here' });
+        box.value = mine.a[key] || '';
+        box.addEventListener('input', () => { mine.a[key] = box.value; saveAnswers(); });
+        body.append(el('p', { class: 'q', text: q }), box);
+      });
+    }
+    $('#act-back').disabled = !act.review && act.i === 0;
+    $('#act-next').hidden = act.review;
+    $('#act-next').textContent = act.i === n - 1 ? 'Finish' : 'Next';
+    $('#act-view').hidden = act.review;
+    $('.panel-body').scrollTop = 0;
+    $('#act-title').focus({ preventScroll: true });
+  }
+
+  function stepActivity(dir) {
+    if (!act.def) return;
+    const n = act.def.stops.length;
+    if (act.review) { if (dir < 0) { act.review = false; renderStop(); } return; }
+    if (dir > 0 && act.i === n - 1) { act.review = true; renderStop(); return; }
+    act.i = clamp(act.i + dir, 0, n - 1);
+    renderStop(); applyStop();
+  }
+
+  function showExportBox(text, msg) {
+    const box = $('#act-export');
+    box.hidden = false; box.value = text; box.focus(); box.select();
+    $('#act-msg').textContent = msg;
+  }
+  function copyAnswers() {
+    const text = answersText();
+    const fallback = () => showExportBox(text, 'Copy the text in the box below (Command + C).');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => { $('#act-export').hidden = true; $('#act-msg').textContent = 'Answers copied. Paste them wherever your teacher asked.'; }, fallback);
+    } else fallback();
+  }
+  function downloadAnswers() {
+    const text = answersText();
+    try {
+      const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+      const a = el('a', { href: url, download: `${act.def.id}-answers.txt` });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      $('#act-msg').textContent = 'Saved to your Downloads folder.';
+    } catch (e) { showExportBox(text, 'Copy the text in the box below (Command + C).'); }
   }
 
   /* ------------------------------------------------------------ panel: worlds, layers, options */
@@ -713,19 +955,28 @@
       if (b && viewer && NAV[b.dataset.nav]) NAV[b.dataset.nav]();
     });
     $('#info-close').addEventListener('click', closeInfo);
+    $('#measure-again').addEventListener('click', () => setMeasure(true));
+    $('#measure-done').addEventListener('click', () => setMeasure(false));
+    $('#act-next').addEventListener('click', () => stepActivity(1));
+    $('#act-back').addEventListener('click', () => stepActivity(-1));
+    $('#act-view').addEventListener('click', () => { if (act.def && !act.review) applyStop(); });
+    $('#act-leave').addEventListener('click', leaveActivity);
     $('#hint-close').addEventListener('click', () => {
       $('#hint').hidden = true;
       try { localStorage.setItem('gg-hint-seen', '1'); } catch (e) { /* storage unavailable: show it again next time */ }
     });
     document.addEventListener('keydown', (ev) => {
       if (ev.key !== 'Escape') return;
-      if (!$('#hint').hidden) $('#hint-close').click(); else closeInfo();
+      if (!$('#hint').hidden) $('#hint-close').click(); else if (measure.on) setMeasure(false); else closeInfo();
     });
     window.addEventListener('resize', () => { if (viewer) viewer.scene.requestRender(); });
     // A link pasted into the address bar of an open page: load that view.
     window.addEventListener('hashchange', () => {
       if (location.hash === lastWritten) return;
-      readLink(); renderAll(); buildViewer(); writeLink();
+      readLink(); renderAll(); buildViewer();
+      if (linkActivity) startActivity(linkActivity.id, linkActivity.stop, linkActivity.keepView);
+      else if (act.def) leaveActivity();
+      else writeLink();
     });
   }
 
@@ -744,6 +995,8 @@
       fatal('The globe could not start on this device. Try reloading the page, or use a different browser.');
       return;
     }
+    await loadActivities();
+    if (linkActivity) await startActivity(linkActivity.id, linkActivity.stop, linkActivity.keepView);
     writeLink();
     if (!seen) { $('#hint').hidden = false; $('#hint-close').focus(); }
   }

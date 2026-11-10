@@ -11,15 +11,16 @@ A browser globe for **intro-level Earth/space science students** to study geolog
 - **Engine: CesiumJS** (decided 2026-11-10 from the Phase 0 benchmark on student Neos; see `docs/phase0-results.md`). Both engines ran at the display cap, and only Cesium can show the Moon and Mars (equirectangular tiles). Loaded from jsDelivr, version pinned in `app/config.js`.
 - **No build step.** Plain HTML, CSS and JS that GitHub Pages serves as-is.
 - **Terrain is keyless:** AWS Terrarium elevation tiles decoded in the browser. No Cesium ion token is used by the app.
-- **Shared links** carry the body, camera view and layers in the URL hash. Nothing is saved in the browser except "hint dismissed".
+- **Shared links** carry the body, camera view, layers and (if one is open) the activity and stop in the URL hash.
+- **Browser storage is minimal:** "hint dismissed" (localStorage) and the student's in-progress activity answers and name (sessionStorage, cleared when the tab closes, so a reload does not lose work). Answers leave the browser only when the student copies or downloads them.
 - **Place search on Earth sends the typed text to OpenStreetMap Nominatim.** This is the one thing a student types that leaves the browser; the page says so next to the search box. Moon and Mars search a built-in list.
-- **Activities are topic-based**, authored as JSON/Markdown files, each with an optional empty `standards` field for later Indiana/NGSS alignment.
+- **Activities are topic-based** JSON files in `app/activities/`, listed in `index.json`, each with an empty `standards` field for later Indiana/NGSS alignment. Format: `docs/activities.md`. New activities need no code changes.
 - Never commit API tokens (the Phase 0 page takes a Cesium ion token pasted in at run time).
 - **Student-facing wording is intro level:** plain names for layers, one sentence on what each shows.
 
 ## Layout
 
-- `app/` — the globe students use (Phase 1). `config.js` (all sources, layers, places), `app.js`, `styles.css`, `index.html`, `data/` (local snapshots). Published at the site root.
+- `app/` — the globe students use. `config.js` (all sources, layers, places), `app.js`, `styles.css`, `index.html`, `data/` (local snapshots), `activities/` (guided tours). Published at the site root.
 - `phase0/` — benchmark/validation page, kept for re-testing hardware and networks. Published at `/phase0/`.
 - `scripts/` — refresh the local data snapshots (volcanoes, plate boundaries). Run from the repo root.
 - `docs/` — planning notes and the Phase 0 test record.
@@ -28,7 +29,7 @@ A browser globe for **intro-level Earth/space science students** to study geolog
 ## Phases
 
 0. Benchmark and choose the engine — done.
-1. MVP globe: curated layers, Earth/Moon/Mars, search, shareable links, Lite mode — in progress.
-2. Tour/activity system with the first three activities.
-3. Remaining activities, swipe compare, basic measurement.
+1. MVP globe: curated layers, Earth/Moon/Mars, search, shareable links, Lite mode — done, live.
+2. Tour/activity system with the first three activities (volcanoes and hotspots, rocks and geologic maps, other worlds), plus a distance-measure tool — built; activity wording awaits teacher review.
+3. Remaining activities (plate boundaries, mountains and rifts, rivers and deltas, glaciers, coastlines and karst), swipe compare.
 4. Pilot with one class section.

@@ -1,0 +1,113 @@
+{
+  "title": "Volcanoes and hotspots",
+  "minutes": 20,
+  "summary": "Why volcanoes are where they are.",
+  "standards": [],
+  "stops": [
+    {
+      "title": "The Ring of Fire",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "volc",
+        "plates"
+      ],
+      "terrain": false,
+      "view": {
+        "lon": -170,
+        "lat": 15,
+        "range": null,
+        "pitch": -90
+      },
+      "text": "Each red triangle is a volcano that has erupted in the last 12,000 years. The yellow lines are the edges of Earth's plates, the giant slabs of rock that make up the planet's outer shell.\n\nYou are looking at the Pacific Ocean. Drag the globe to look all the way around its edges.",
+      "questions": [
+        "Where are most of the volcanoes: in the middle of the plates or near their edges? Describe the pattern you see around the Pacific."
+      ]
+    },
+    {
+      "title": "Where one plate dives under another",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "volc",
+        "plates",
+        "quakes"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -70.5,
+        "lat": -23.5,
+        "range": 1800000,
+        "pitch": -50
+      },
+      "text": "Along the west coast of South America, the Nazca Plate under the ocean is sliding beneath the South American Plate. This is called subduction. The deep trench just off the coast marks where the ocean plate bends down.\n\nAs the sinking plate goes deeper it heats up and gives off water. The water makes the hot rock above it melt. The melted rock, called magma, rises and feeds a line of volcanoes.\n\nThe dots are earthquakes from the past 30 days. Their color shows how deep each one was.",
+      "questions": [
+        "Are the volcanoes right on the yellow plate edge, or set back from it? Use the ↔ measure button to find about how far.",
+        "Look at the earthquake colors. Are the deeper earthquakes closer to the ocean or farther inland? What does that tell you about the sinking plate?"
+      ]
+    },
+    {
+      "title": "Volcanoes in the middle of a plate",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "volc",
+        "plates"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -157,
+        "lat": 20.5,
+        "range": 1500000,
+        "pitch": -60
+      },
+      "text": "Hawaii's volcanoes are some of the most active on Earth. Now zoom out and look for a yellow line. There isn't one nearby. Hawaii sits in the middle of the Pacific Plate.\n\nGeologists explain this with a hotspot: a place where very hot rock rises from deep inside the Earth and melts its way up through the plate above it.",
+      "questions": [
+        "Use the ↔ measure button. About how far is Hawaii from the nearest plate edge?",
+        "Why can't subduction explain Hawaii's volcanoes?"
+      ]
+    },
+    {
+      "title": "A trail of old volcanoes",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "volc"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -163,
+        "lat": 23,
+        "range": 3600000,
+        "pitch": -90
+      },
+      "text": "Northwest of Hawaii, a line of islands and underwater mountains stretches across the sea floor. Every one of them was once a volcano sitting where the Big Island is now.\n\nThe hotspot stays in about the same place while the Pacific Plate slowly slides over it. Each volcano is carried away and goes quiet, and a new one grows behind it.\n\nAges of the rock: the Big Island (the largest island, at the southeast end) is still erupting today. Kauai (the last large island at the northwest end of the main group) is about 5 million years old. Midway, far along the chain, is about 28 million years old.",
+      "questions": [
+        "Which direction is the Pacific Plate moving? Explain how the ages tell you.",
+        "Use the ↔ measure button to measure from the Big Island to Kauai. Kauai formed about 5 million years ago. About how many kilometers does the plate move in one million years?"
+      ]
+    },
+    {
+      "title": "A hotspot on a plate edge",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "volc",
+        "plates",
+        "quakes"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -19,
+        "lat": 64.8,
+        "range": 1200000,
+        "pitch": -55
+      },
+      "text": "Iceland has both. It sits on the Mid-Atlantic Ridge, a plate edge where the North American and Eurasian plates are pulling apart. It also sits over a hotspot.\n\nAs the plates separate, hot rock underneath rises to fill the gap. The pressure on it drops as it rises, and that makes it melt. So much magma has come up here that this part of the ridge stands above the sea.",
+      "questions": [
+        "Follow the yellow line through Iceland. How do the volcanoes line up with it?",
+        "You have now seen three settings for volcanoes: where a plate sinks (the Andes), over a hotspot (Hawaii), and where plates pull apart (Iceland). Pick one and explain in your own words why rock melts there."
+      ]
+    }
+  ]
+}
