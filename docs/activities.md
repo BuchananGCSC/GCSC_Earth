@@ -43,7 +43,7 @@ Add `&stop=3` to open at the third stop.
 | `body` | `earth`, `moon` or `mars`. |
 | `base` | The picture. Earth: `bm` (Earth from space), `s2` (sharper satellite), `usgs` (aerial photos), `modis` (a few days ago). Moon: `lro`, `lola` (heights in color). Mars: `viking`, `mola` (heights in color). |
 | `layers` | Up to three of `geo`, `plates`, `quakes`, `volc` (Earth only). `geo.50` sets the geologic map to 50% solid. |
-| `terrain` | `true` for 3D terrain (Earth only). |
+| `terrain` | `true` for 3D terrain (any world). |
 | `view` | Where the camera looks. `lon` and `lat` in degrees (west and south are negative). `range` is the distance from the camera to that point in metres; `null` shows the whole globe. `pitch` is the tilt: `-90` looks straight down, `-45` looks at an angle. Optional `heading` turns the view (0 = north at the top). |
 | `text` | The reading. Separate paragraphs with `\n\n`. Plain text only. |
 | `questions` | Zero or more questions. Each gets an answer box. |

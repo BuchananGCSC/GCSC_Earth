@@ -12,7 +12,9 @@ of geology layers. Static site, no accounts, no build step.
 - Earth pictures: a cloud-free view, a sharper satellite view, US aerial photos, and a recent daily satellite image.
 - Layers to add: geologic map (click for the rock at that spot), plate boundaries, earthquakes of the past
   30 days (click a dot), and volcanoes (click a triangle). Up to three at once.
-- Optional 3D terrain on Earth, with heights stretched 2x.
+- Optional 3D terrain on all three worlds, with heights stretched 2x. With it on, the readout under the pointer
+  shows the approximate height of the ground.
+- "Heights in color" pictures for the Moon and Mars, with a color key in kilometers.
 - Place search (Earth) and "places to visit" buttons for each world.
 - On-screen zoom, tilt and turn buttons for trackpads.
 - "Copy link to this view": the link reopens the same world, view and layers. This is how students hand in a view.
@@ -50,6 +52,13 @@ python3 scripts/snapshot-volcanoes.py
 
 ```bash
 python3 scripts/snapshot-plates.py
+```
+
+The Moon and Mars terrain tiles are built from NASA elevation grids (needs numpy and Pillow; downloads 66 MB the
+first time). They only need rebuilding if the settings in the script change:
+
+```bash
+python3 scripts/build-planet-terrain.py
 ```
 
 See [CLAUDE.md](CLAUDE.md) for project decisions and [docs/phase0-results.md](docs/phase0-results.md) for the

@@ -46,7 +46,7 @@
       const n = Number(op);
       state.overlays.set(id, op !== undefined && Number.isFinite(n) ? clamp(Math.round(n), 10, 100) : (def.opacity || 100));
     }
-    state.terrain = p.get('terrain') === '1' && !!w.hasTerrain;
+    state.terrain = p.get('terrain') === '1' && !!w.terrain;
     state.quality = p.get('q') === 'full' ? 'full' : 'lite';
     const v = (p.get('view') || '').split(',').map(Number);
     state.view = (v.length === 5 && v.every(Number.isFinite))
@@ -119,14 +119,16 @@
   const fillDate = (text, def) => text.split('{date}').join(recentDate(def.dateOffsetDays || 3));
 
   /* ------------------------------------------------------------ 3D terrain (keyless)
-     Cesium asks for elevation in its own latitude/longitude tile grid. The elevation
-     tiles on AWS are standard web-map tiles with height packed into the colors, so each
-     Cesium tile is filled by sampling one or two of those web-map tiles. */
-  const demCache = new Map();          // "z/x/y" -> Promise<Int16Array 256x256>
+     Elevation arrives as image tiles with the height packed into the colors.
+     Earth's come from a public service as standard web-map tiles; the Moon's and
+     Mars's are stored with the site as latitude/longitude tiles. Cesium asks for
+     elevation in its own latitude/longitude grid, and the two functions below fill
+     each request by sampling the right image tile. */
+  const demCache = new Map();          // tile address -> Promise<{ data: Int16Array, size }>
   const DEM_KEEP = 80;
   let demCanvas = null;
-  function demTile(z, x, y) {
-    const key = `${z}/${x}/${y}`;
+  function demTile(cfg, z, x, y) {
+    const key = cfg.url.replace('{z}', z).replace('{x}', x).replace('{y}', y);
     let p = demCache.get(key);
     if (p) { demCache.delete(key); demCache.set(key, p); return p; }      // move to newest
     p = new Promise((ok, fail) => {
@@ -134,17 +136,19 @@
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         try {
-          if (!demCanvas) { demCanvas = document.createElement('canvas'); demCanvas.width = demCanvas.height = 256; }
+          const n = img.naturalWidth;
+          if (!demCanvas) demCanvas = document.createElement('canvas');
+          if (demCanvas.width !== n) demCanvas.width = demCanvas.height = n;
           const ctx = demCanvas.getContext('2d', { willReadFrequently: true });
-          ctx.drawImage(img, 0, 0, 256, 256);
-          const px = ctx.getImageData(0, 0, 256, 256).data;
-          const out = new Int16Array(65536);
-          for (let i = 0, j = 0; i < 65536; i++, j += 4) out[i] = px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768;
-          ok(out);
+          ctx.drawImage(img, 0, 0);
+          const px = ctx.getImageData(0, 0, n, n).data;
+          const data = new Int16Array(n * n);
+          for (let i = 0, j = 0; i < data.length; i++, j += 4) data[i] = px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768;
+          ok({ data, size: n });
         } catch (e) { fail(e); }
       };
       img.onerror = () => fail(new Error('elevation tile failed'));
-      img.src = APP.terrain.url.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+      img.src = key;
     });
     p.catch(() => demCache.delete(key));
     demCache.set(key, p);
@@ -152,42 +156,76 @@
     return p;
   }
 
-  function makeTerrain(ell) {
-    const W = 65, MAXLAT = rad(85.0511);
-    const tiling = new C.GeographicTilingScheme({ ellipsoid: ell });
+  const POSTS = 65;                    // height samples along each side of a Cesium terrain tile
+
+  // Earth: sample one or two web-map (Mercator) tiles.
+  function mercatorHeights(cfg, tiling) {
+    const W = POSTS, MAXLAT = rad(85.0511);
     const mercY = (lat) => (1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2;   // 0 at the top, 1 at the bottom
-    return new C.CustomHeightmapTerrainProvider({
-      width: W, height: W, tilingScheme: tiling, ellipsoid: ell, credit: APP.terrain.credit,
-      callback(x, y, level) {
-        const r = tiling.tileXYToRectangle(x, y, level);
-        const yN = mercY(clamp(r.north, -MAXLAT, MAXLAT)), yS = mercY(clamp(r.south, -MAXLAT, MAXLAT));
-        // Web-map zoom: columns line up exactly at level+1; go lower near the poles so
-        // the tile's latitude range fits inside two web-map rows.
-        let z = Math.min(level + 1, APP.terrain.maxZoom);
-        if (yS - yN > 1e-9) z = Math.min(z, Math.floor(Math.log2(1 / (yS - yN))));
-        z = Math.max(0, z);
-        const n = 2 ** z;
-        const tx = clamp(Math.floor((r.west + Math.PI) / (2 * Math.PI) * n + 1e-6), 0, n - 1);
-        const ty0 = clamp(Math.floor(yN * n), 0, n - 1);
-        const ty1 = clamp(Math.floor(yS * n - 1e-9), ty0, n - 1);
-        const jobs = [demTile(z, tx, ty0)];
-        if (ty1 !== ty0) jobs.push(demTile(z, tx, ty1));
-        return Promise.all(jobs).then((tiles) => {
-          const out = new Float32Array(W * W);
-          for (let j = 0; j < W; j++) {
-            const lat = clamp(r.north - (r.north - r.south) * j / (W - 1), -MAXLAT, MAXLAT);
-            const gy = mercY(lat) * n * 256;
-            const t = clamp(Math.floor(gy / 256), ty0, ty0 + tiles.length - 1);
-            const py = clamp(Math.floor(gy - t * 256), 0, 255);
-            const src = tiles[t - ty0];
-            for (let i = 0; i < W; i++) {
-              const lon = r.west + (r.east - r.west) * i / (W - 1);
-              const px = clamp(Math.floor((lon + Math.PI) / (2 * Math.PI) * n * 256 - tx * 256), 0, 255);
-              out[j * W + i] = src[py * 256 + px];
-            }
+    return (x, y, level) => {
+      const r = tiling.tileXYToRectangle(x, y, level);
+      const yN = mercY(clamp(r.north, -MAXLAT, MAXLAT)), yS = mercY(clamp(r.south, -MAXLAT, MAXLAT));
+      // Web-map zoom: columns line up exactly at level+1; go lower near the poles so
+      // the tile's latitude range fits inside two web-map rows.
+      let z = Math.min(level + 1, cfg.maxZoom);
+      if (yS - yN > 1e-9) z = Math.min(z, Math.floor(Math.log2(1 / (yS - yN))));
+      z = Math.max(0, z);
+      const n = 2 ** z;
+      const tx = clamp(Math.floor((r.west + Math.PI) / (2 * Math.PI) * n + 1e-6), 0, n - 1);
+      const ty0 = clamp(Math.floor(yN * n), 0, n - 1);
+      const ty1 = clamp(Math.floor(yS * n - 1e-9), ty0, n - 1);
+      const jobs = [demTile(cfg, z, tx, ty0)];
+      if (ty1 !== ty0) jobs.push(demTile(cfg, z, tx, ty1));
+      return Promise.all(jobs).then((tiles) => {
+        const S = tiles[0].size, out = new Float32Array(W * W);
+        for (let j = 0; j < W; j++) {
+          const lat = clamp(r.north - (r.north - r.south) * j / (W - 1), -MAXLAT, MAXLAT);
+          const gy = mercY(lat) * n * S;
+          const t = clamp(Math.floor(gy / S), ty0, ty0 + tiles.length - 1);
+          const py = clamp(Math.floor(gy - t * S), 0, S - 1);
+          const src = tiles[t - ty0].data;
+          for (let i = 0; i < W; i++) {
+            const lon = r.west + (r.east - r.west) * i / (W - 1);
+            const px = clamp(Math.floor((lon + Math.PI) / (2 * Math.PI) * n * S - tx * S), 0, S - 1);
+            out[j * W + i] = src[py * S + px];
           }
-          return out;
-        }).catch(() => undefined);     // on failure Cesium keeps showing the coarser parent tile
+        }
+        return out;
+      });
+    };
+  }
+
+  // Moon and Mars: the stored tiles use the same latitude/longitude grid as Cesium, so each
+  // request is one stored tile, or a window inside one when Cesium wants more detail than is stored.
+  function geographicHeights(cfg) {
+    const W = POSTS;
+    return (x, y, level) => {
+      if (level > cfg.maxZoom + 3) return undefined;      // finer than the data: keep the parent tile
+      const z = clamp(level - 1, 0, cfg.maxZoom), k = 2 ** (level - z);
+      return demTile(cfg, z, Math.floor(x / k), Math.floor(y / k)).then(({ data, size: S }) => {
+        const win = S / k, x0 = (x % k) * win, y0 = (y % k) * win, out = new Float32Array(W * W);
+        for (let j = 0; j < W; j++) {
+          const fy = clamp(y0 + win * j / (W - 1) - 0.5, 0, S - 1), ya = Math.floor(fy), yb = Math.min(S - 1, ya + 1), wy = fy - ya;
+          for (let i = 0; i < W; i++) {
+            const fx = clamp(x0 + win * i / (W - 1) - 0.5, 0, S - 1), xa = Math.floor(fx), xb = Math.min(S - 1, xa + 1), wx = fx - xa;
+            const top = data[ya * S + xa] * (1 - wx) + data[ya * S + xb] * wx;
+            const bot = data[yb * S + xa] * (1 - wx) + data[yb * S + xb] * wx;
+            out[j * W + i] = top * (1 - wy) + bot * wy;
+          }
+        }
+        return out;
+      });
+    };
+  }
+
+  function makeTerrain(ell, cfg) {
+    const tiling = new C.GeographicTilingScheme({ ellipsoid: ell });
+    const heights = cfg.grid === 'geographic' ? geographicHeights(cfg) : mercatorHeights(cfg, tiling);
+    return new C.CustomHeightmapTerrainProvider({
+      width: POSTS, height: POSTS, tilingScheme: tiling, ellipsoid: ell, credit: cfg.credit,
+      callback(x, y, level) {
+        const job = heights(x, y, level);
+        return job && job.catch(() => undefined);     // on failure Cesium keeps showing the coarser parent tile
       },
     });
   }
@@ -385,9 +423,9 @@
   }
 
   function applyTerrain() {
-    const on = state.terrain && !!world().hasTerrain;
-    viewer.terrainProvider = on ? makeTerrain(ell) : new C.EllipsoidTerrainProvider({ ellipsoid: ell });
-    viewer.scene.verticalExaggeration = on ? APP.terrain.exaggeration : 1;
+    const on = state.terrain && !!world().terrain;
+    viewer.terrainProvider = on ? makeTerrain(ell, world().terrain) : new C.EllipsoidTerrainProvider({ ellipsoid: ell });
+    viewer.scene.verticalExaggeration = on ? world().terrain.exaggeration : 1;
     viewer.scene.requestRender();
   }
 
@@ -453,7 +491,16 @@
     const hit = groundAt(pos);
     if (!hit) { box.textContent = ''; return; }
     const c = C.Cartographic.fromCartesian(hit, ell);
-    box.textContent = fmtLatLon(deg(c.latitude), deg(c.longitude));
+    let text = fmtLatLon(deg(c.latitude), deg(c.longitude));
+    // With 3D terrain on, add the height of the ground (from the terrain currently drawn, so it is approximate).
+    if (state.terrain && world().terrain) {
+      const drawn = viewer.scene.globe.getHeight(c);
+      if (Number.isFinite(drawn)) {
+        const m = drawn / world().terrain.exaggeration, r = Math.abs(m) >= 1000 ? Math.round(m / 100) * 100 : Math.round(m / 10) * 10;
+        text += ` · about ${num(Math.abs(r))} m ${r < 0 ? 'below' : 'above'} ${world().terrain.zeroName}`;
+      }
+    }
+    box.textContent = text;
   }
 
   // The point on the ground under a screen position (follows 3D terrain when it is on).
@@ -664,7 +711,7 @@
       const d = byId(w.overlays, id);
       if (d && wanted.size < APP.maxOverlays) wanted.set(id, clamp(Number(op) || d.opacity || 100, 10, 100));
     }
-    const terrain = !!st.terrain && !!w.hasTerrain;
+    const terrain = !!st.terrain && !!w.terrain;
     if (body !== state.body) {
       Object.assign(state, { body, base, overlays: wanted, terrain, view: null });
       buildViewer();
@@ -791,6 +838,22 @@
     renderAll(); buildViewer(); writeLink();
   }
 
+  // A color bar with labeled values, for pictures whose colors stand for numbers.
+  function colorKey(sc) {
+    const lo = sc.stops[0][0], hi = sc.stops[sc.stops.length - 1][0];
+    const pct = (v) => ((v - lo) / (hi - lo) * 100).toFixed(1) + '%';
+    const colorAt = (v) => sc.stops.reduce((best, st) => Math.abs(st[0] - v) < Math.abs(best[0] - v) ? st : best)[1];
+    const sign = (v) => (v > 0 ? '+' : v < 0 ? '\u2212' : '') + Math.abs(v);
+    const bar = el('div', { class: 'key-bar', role: 'img',
+      'aria-label': `Color key from ${sign(lo)} ${sc.unit} to ${sign(hi)} ${sc.unit}`,
+      style: `background:linear-gradient(to right, ${sc.stops.map(([v, c]) => `${c} ${pct(v)}`).join(', ')})` });
+    const ticks = el('div', { class: 'key-ticks', 'aria-hidden': 'true' },
+      ...sc.ticks.map((v) => el('span', { style: `left:${pct(v)}`, text: sign(v) })));
+    const marks = el('ul', { class: 'legend' }, ...(sc.marks || []).map(([v, text]) =>
+      el('li', null, el('i', { style: `background:${colorAt(v)}` }), el('span', { text: `${text}: about ${sign(v)} ${sc.unit}` }))));
+    return el('div', { class: 'extra key' }, el('p', { class: 'fine', text: `Height in ${sc.unit === 'km' ? 'kilometers' : sc.unit}` }), bar, ticks, marks);
+  }
+
   function renderLayers() {
     const w = world();
     const baseBox = $('#base-list'); baseBox.textContent = '';
@@ -799,7 +862,8 @@
       baseBox.append(el('div', { class: 'layer' + (on ? ' on' : '') },
         el('label', null,
           el('input', { type: 'radio', name: 'base', value: def.id, checked: on, onchange: () => { setBase(def.id); renderLayers(); writeLink(); } }),
-          el('span', null, el('span', { text: def.name }), el('p', { class: 'fine note', text: def.note.split('{date}').join(niceDate(def)) })))));
+          el('span', null, el('span', { text: def.name }), el('p', { class: 'fine note', text: def.note.split('{date}').join(niceDate(def)) }))),
+        on && def.scale ? colorKey(def.scale) : null));
     }
 
     $('#overlay-section').hidden = !w.overlays.length;
@@ -851,9 +915,9 @@
 
   function renderOptions() {
     const w = world();
-    $('#terrain-row').hidden = !w.hasTerrain;
+    $('#terrain-row').hidden = !w.terrain;
     $('#opt-terrain').checked = state.terrain;
-    $('#terrain-note').textContent = `(heights stretched ${APP.terrain.exaggeration}× so they show)`;
+    $('#terrain-note').textContent = w.terrain ? `(heights stretched ${w.terrain.exaggeration}× so they show)` : '';
     $('#opt-sharp').checked = state.quality === 'full';
   }
 

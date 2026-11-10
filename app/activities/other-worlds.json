@@ -9,7 +9,7 @@
       "body": "moon",
       "base": "lro",
       "layers": [],
-      "terrain": false,
+      "terrain": true,
       "view": {
         "lon": -11.4,
         "lat": -43.3,
@@ -27,7 +27,7 @@
       "body": "moon",
       "base": "lro",
       "layers": [],
-      "terrain": false,
+      "terrain": true,
       "view": {
         "lon": -15,
         "lat": 33,
@@ -80,14 +80,14 @@
       "body": "mars",
       "base": "viking",
       "layers": [],
-      "terrain": false,
+      "terrain": true,
       "view": {
         "lon": -134,
         "lat": 18.65,
         "range": 1800000,
         "pitch": -60
       },
-      "text": "This is Olympus Mons on Mars. It stands about 22 kilometers high. That is about twice the height of Mauna Kea measured from the sea floor.\n\nUnder Picture, choose \"Heights in color\" to see its shape more clearly. Then switch back.\n\nMars has no moving plates. A volcano there can stay over the same hot spot for a very long time while lava piles up in one place. Mars also has weaker gravity than Earth, so a tall mountain can hold itself up more easily.",
+      "text": "This is Olympus Mons on Mars. It stands about 22 kilometers high. That is about twice the height of Mauna Kea measured from the sea floor.\n\nThe ground here is shown in 3D, with heights stretched 2× just as they are for Earth. Under Picture, choose \"Heights in color\" to see a key for how high each color is. Then switch back.\n\nMars has no moving plates. A volcano there can stay over the same hot spot for a very long time while lava piles up in one place. Mars also has weaker gravity than Earth, so a tall mountain can hold itself up more easily.",
       "questions": [
         "Use the ↔ measure button to measure across Olympus Mons, from cliff edge to cliff edge. How wide is it? About how many Big Islands would fit across it?",
         "Give two reasons a volcano on Mars can grow so much bigger than one on Earth."
@@ -98,7 +98,7 @@
       "body": "mars",
       "base": "viking",
       "layers": [],
-      "terrain": false,
+      "terrain": true,
       "view": {
         "lon": -65,
         "lat": -11,

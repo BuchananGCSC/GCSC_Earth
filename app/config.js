@@ -31,14 +31,6 @@ const APP = {
   // The list of activities (guided tours). Each activity is its own JSON file; see docs/activities.md.
   activitiesIndex: 'activities/index.json',
 
-  // Elevation for 3D terrain (Earth only). No key needed.
-  terrain: {
-    url: 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png',
-    maxZoom: 12,            // deepest elevation tile level requested
-    exaggeration: 2,        // heights are stretched so mountains show from far away
-    credit: 'Elevation: Mapzen / AWS Terrain Tiles',
-  },
-
   // Quality settings. "lite" matches what was benchmarked on the student laptops.
   quality: {
     lite: { label: 'Lite',    pixelRatio: 1,   detail: 4, atmosphere: false, antialias: false, tileCache: 60 },
@@ -58,6 +50,17 @@ APP.cesiumBase = `https://cdn.jsdelivr.net/npm/cesium@${APP.cesiumVersion}/Build
      scheme: 'webmercator' (standard web-map tiles) or 'geographic' (equirectangular)
      url placeholders: {z} {x} {y}, and {date} = a recent UTC date (dateOffsetDays back)
      opacity: starting see-through level, 0-100 (tiles only; gives the layer a slider)
+     scale:  a color key for a picture whose colors stand for numbers.
+             stops = [value, color] pairs from low to high, ticks = values to label,
+             marks = [value, text] landmarks listed under the bar.
+
+   terrain (optional, per world): elevation for the 3D terrain switch.
+     grid: 'webmercator' = standard web-map tiles from a public service (Earth)
+           'geographic'  = latitude/longitude tiles stored with the site (Moon, Mars;
+                           made by scripts/build-planet-terrain.py)
+     Both pack height into the tile colors: metres = red*256 + green + blue/256 - 32768.
+     exaggeration: heights are stretched by this much so mountains show from far away.
+     The same value is used on every world so that sizes can be compared.
      credit / license: shown on the globe and kept here for the record
 
    place fields: lon, lat in degrees (east and north positive), range = distance
@@ -69,7 +72,8 @@ const WORLDS = {
     radii: null,                                   // null = Cesium's built-in Earth shape
     home: { lon: -40, lat: 20 },
     minZoomM: 1500,
-    hasTerrain: true,
+    terrain: { grid: 'webmercator', url: 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png',
+      maxZoom: 12, exaggeration: 2, zeroName: 'sea level', credit: 'Elevation: Mapzen / AWS Terrain Tiles' },
     searchRemote: true,
     base: [
       { id: 'bm', name: 'Earth from space', kind: 'tiles', scheme: 'webmercator', maxZoom: 8,
@@ -128,6 +132,8 @@ const WORLDS = {
     radii: 'MOON',                                 // Cesium's built-in Moon shape
     home: { lon: 0, lat: 0 },
     minZoomM: 20000,
+    terrain: { grid: 'geographic', url: 'data/terrain/moon/{z}/{x}/{y}.png', maxZoom: 4, exaggeration: 2,
+      zeroName: 'the Moon\'s average level', credit: 'Elevation: NASA LRO LOLA' },
     base: [
       { id: 'lro', name: 'Moon from orbit', kind: 'tiles', scheme: 'geographic', maxZoom: 7,
         url: 'https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm/{z}/{y}/{x}.jpg',
@@ -135,7 +141,12 @@ const WORLDS = {
         credit: 'NASA/GSFC/Arizona State University (LRO WAC), via NASA Trek', license: 'Public domain; credit NASA' },
       { id: 'lola', name: 'Heights in color', kind: 'tiles', scheme: 'geographic', maxZoom: 5,
         url: 'https://trek.nasa.gov/tiles/Moon/EQ/LRO_LOLA_ClrShade_Global_128ppd_v04/1.0.0/default/default028mm/{z}/{y}/{x}.png',
-        note: 'Colors show how high the ground is: blue and purple are low, green and yellow are in between, red and white are high.',
+        note: 'Colors show how high the ground is, compared with the Moon\'s average level.',
+        // Key measured by scripts/calibrate-height-colors.py (color map compared with the LOLA elevation grid).
+        scale: { unit: 'km', ticks: [-8, -4, 0, 4, 8],
+          stops: [[-8, '#9655b6'], [-6, '#6b56b7'], [-4, '#5775bb'], [-2, '#56a4b7'], [0, '#5ac1a4'], [2, '#5cc473'],
+                  [4, '#98c65d'], [5, '#c4c15d'], [6, '#c7a95d'], [8, '#c8755e'], [10, '#c69597']],
+          marks: [[-7, 'Floor of the South Pole-Aitken basin'], [-2, 'Dark lava plains such as Mare Imbrium'], [6, 'High ground on the far side']] },
         credit: 'NASA/GSFC (LRO LOLA), via NASA Trek', license: 'Public domain; credit NASA' },
     ],
     overlays: [],
@@ -153,6 +164,8 @@ const WORLDS = {
     radii: [3396190, 3396190, 3376200],            // metres: equator, equator, pole
     home: { lon: -80, lat: 0 },
     minZoomM: 20000,
+    terrain: { grid: 'geographic', url: 'data/terrain/mars/{z}/{x}/{y}.png', maxZoom: 4, exaggeration: 2,
+      zeroName: 'Mars\'s average level', credit: 'Elevation: NASA MGS MOLA' },
     base: [
       { id: 'viking', name: 'Mars from orbit', kind: 'tiles', scheme: 'geographic', maxZoom: 7,
         url: 'https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg',
@@ -160,7 +173,12 @@ const WORLDS = {
         credit: 'NASA/JPL/USGS (Viking MDIM 2.1), via NASA Trek', license: 'Public domain; credit NASA' },
       { id: 'mola', name: 'Heights in color', kind: 'tiles', scheme: 'geographic', maxZoom: 7,
         url: 'https://trek.nasa.gov/tiles/Mars/EQ/Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg',
-        note: 'Colors show how high the ground is: blue is low, green and yellow are in between, red and white are high.',
+        note: 'Colors show how high the ground is, compared with Mars\'s average level.',
+        // Key measured by scripts/calibrate-height-colors.py (color map compared with the MOLA elevation grid).
+        scale: { unit: 'km', ticks: [-8, 0, 8, 21],
+          stops: [[-8, '#7a379a'], [-6, '#6845c1'], [-4, '#3c95d3'], [-2, '#71dc67'], [0, '#edf05b'], [2, '#e6a462'],
+                  [4, '#c96a5f'], [6, '#a98076'], [8, '#c0a39b'], [10, '#d3bbb4'], [12, '#e7dad7'], [16, '#f9f5f3'], [21, '#ffffff']],
+          marks: [[-7, 'Floor of the Hellas basin'], [-4, 'Northern lowlands'], [2, 'Southern highlands'], [21, 'Top of Olympus Mons']] },
         credit: 'NASA/JPL/GSFC (MGS MOLA), via NASA Trek', license: 'Public domain; credit NASA' },
     ],
     overlays: [],
