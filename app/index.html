@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geoscience Globe</title>
+<meta name="description" content="A globe for exploring the geology of Earth, the Moon and Mars.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <aside id="panel" aria-label="Globe controls">
+    <header class="panel-head">
+      <h1>Geoscience Globe</h1>
+      <button id="panel-close" class="icon-btn" type="button" aria-label="Hide the controls" title="Hide the controls">&#x2039;</button>
+    </header>
+
+    <div class="panel-body">
+      <section aria-labelledby="h-world">
+        <h2 id="h-world">World</h2>
+        <div id="worlds" class="segmented" role="group" aria-labelledby="h-world"></div>
+      </section>
+
+      <section aria-labelledby="h-find">
+        <h2 id="h-find">Find a place</h2>
+        <form id="search-form" autocomplete="off">
+          <input id="search-box" type="search" aria-label="Place name" placeholder="Mount Everest" maxlength="80">
+          <button type="submit" id="search-go">Go</button>
+        </form>
+        <p id="search-note" class="fine"></p>
+        <ul id="search-results" class="results" aria-live="polite"></ul>
+        <h3 id="h-visit">Places to visit</h3>
+        <div id="places" class="chips" role="group" aria-labelledby="h-visit"></div>
+        <p id="place-note" class="fine" aria-live="polite"></p>
+      </section>
+
+      <section aria-labelledby="h-base">
+        <h2 id="h-base">Picture</h2>
+        <div id="base-list" class="layer-list" role="radiogroup" aria-labelledby="h-base"></div>
+      </section>
+
+      <section id="overlay-section" aria-labelledby="h-over">
+        <h2 id="h-over">Add to the globe</h2>
+        <div id="overlay-list" class="layer-list"></div>
+        <p id="overlay-msg" class="fine warn" role="status"></p>
+      </section>
+
+      <section aria-labelledby="h-opts">
+        <h2 id="h-opts">Options</h2>
+        <label class="row" id="terrain-row"><input type="checkbox" id="opt-terrain"> <span>3D terrain <span class="fine" id="terrain-note"></span></span></label>
+        <label class="row"><input type="checkbox" id="opt-sharp"> <span>Sharper picture <span class="fine">(uses more battery)</span></span></label>
+      </section>
+
+      <section aria-labelledby="h-share">
+        <h2 id="h-share">Share this view</h2>
+        <button type="button" id="share-btn" class="primary">Copy link to this view</button>
+        <p id="share-msg" class="fine" role="status"></p>
+        <input id="share-url" type="text" readonly hidden aria-label="Link to this view">
+      </section>
+
+      <p class="fine credits-note">Map data credits appear at the bottom of the globe.</p>
+    </div>
+  </aside>
+
+  <main id="stage">
+    <div id="globe" aria-label="Globe. Drag to move, scroll to zoom."></div>
+    <button id="panel-open" class="icon-btn float" type="button" aria-label="Show the controls" title="Show the controls" hidden>&#x203A;</button>
+
+    <div id="nav" role="group" aria-label="Move the view">
+      <button type="button" data-nav="zoom-in"  aria-label="Zoom in"  title="Zoom in">+</button>
+      <button type="button" data-nav="zoom-out" aria-label="Zoom out" title="Zoom out">&minus;</button>
+      <span class="gap"></span>
+      <button type="button" data-nav="tilt-up"   aria-label="Tilt toward the horizon" title="Tilt toward the horizon">&#x2934;</button>
+      <button type="button" data-nav="tilt-down" aria-label="Tilt to look straight down" title="Look straight down">&#x2935;</button>
+      <span class="gap"></span>
+      <button type="button" data-nav="turn-left"  aria-label="Turn left"  title="Turn left">&#x21BA;</button>
+      <button type="button" data-nav="turn-right" aria-label="Turn right" title="Turn right">&#x21BB;</button>
+      <span class="gap"></span>
+      <button type="button" data-nav="north" aria-label="Put north at the top" title="North at the top">N</button>
+      <button type="button" data-nav="home"  aria-label="Show the whole globe" title="Show the whole globe">&#x25CE;</button>
+      <button type="button" data-nav="help"  aria-label="How to move" title="How to move">?</button>
+    </div>
+
+    <div id="readout" aria-hidden="true"></div>
+
+    <div id="info" class="card" role="dialog" aria-labelledby="info-title" hidden>
+      <button type="button" id="info-close" class="icon-btn" aria-label="Close">&times;</button>
+      <h2 id="info-title"></h2>
+      <div id="info-body"></div>
+    </div>
+
+    <div id="hint" class="card" role="dialog" aria-labelledby="hint-title" hidden>
+      <h2 id="hint-title">How to move</h2>
+      <ul>
+        <li><b>Drag</b> to spin the globe.</li>
+        <li><b>Scroll with two fingers</b> to zoom in and out.</li>
+        <li><b>Hold Control and drag</b> to tilt.</li>
+        <li>Or use the <b>buttons on the right</b>.</li>
+      </ul>
+      <button type="button" id="hint-close" class="primary">Got it</button>
+    </div>
+
+    <div id="banner" role="alert" hidden></div>
+    <div id="loading">Loading the globe…</div>
+  </main>
+</div>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

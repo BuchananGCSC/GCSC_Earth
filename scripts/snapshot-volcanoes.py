@@ -17,7 +17,10 @@ from datetime import date
 URL = ('https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=1.0.0'
        '&request=GetFeature&typeName=GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes'
        '&outputFormat=application/json')
-OUT = pathlib.Path(__file__).resolve().parent.parent / 'phase0' / 'data' / 'gvp-holocene-volcanoes.geojson'
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+# The app's copy is the one students see; the Phase 0 benchmark page keeps its own copy.
+OUTS = [ROOT / 'app' / 'data' / 'gvp-holocene-volcanoes.geojson',
+        ROOT / 'phase0' / 'data' / 'gvp-holocene-volcanoes.geojson']
 
 # Fields an intro-level student layer needs. The long text summaries and photo
 # links are left out to keep the file small; link to volcano.si.edu by number instead.
@@ -53,9 +56,11 @@ def main():
         },
         'features': feats,
     }
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(out, separators=(',', ':'), ensure_ascii=False))
-    print(f'Wrote {len(feats)} volcanoes, {OUT.stat().st_size // 1024} KB -> {OUT}')
+    text = json.dumps(out, separators=(',', ':'), ensure_ascii=False)
+    for path in OUTS:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+        print(f'Wrote {len(feats)} volcanoes, {path.stat().st_size // 1024} KB -> {path}')
 
 
 if __name__ == '__main__':

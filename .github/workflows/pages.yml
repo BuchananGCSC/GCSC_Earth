@@ -1,6 +1,6 @@
 # Publish the static site to GitHub Pages on every push to main.
-# No build step: the files are copied as-is. Phase 0 is served at /phase0/;
-# the site root redirects there until the real app takes its place.
+# No build step: the files are copied as-is. The globe (app/) is the site root;
+# the Phase 0 benchmark page stays available at /phase0/.
 name: Deploy to GitHub Pages
 
 on:
@@ -28,14 +28,8 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
+          cp -r app/. _site/
           cp -r phase0 _site/phase0
-          cat > _site/index.html <<'HTML'
-          <!doctype html>
-          <meta charset="utf-8">
-          <title>Geoscience Globe</title>
-          <meta http-equiv="refresh" content="0; url=phase0/">
-          <p><a href="phase0/">Geoscience Globe — Phase 0 check</a></p>
-          HTML
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
