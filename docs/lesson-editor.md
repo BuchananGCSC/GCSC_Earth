@@ -19,6 +19,47 @@ Students never see the editor. It is the same globe with an extra **Editor** tab
 7. Press **Preview as a student** to walk through the lesson exactly as students will. **Leave the lesson**
    brings you back to the editor.
 
+## Show change over time
+
+Some pictures on the Controls tab have a date or a year: **Earth on one day** (any day since 2000), **Sharper
+satellite view** (2016 to 2024), **Landsat photos** (1985, 1990, 2000) and **Sea ice** (2002 to 2025).
+
+To compare two times, tick **Compare two pictures** on the Controls tab. Choose the picture and date for the left
+side in the list above it, and the picture and date for the right side below it. A bar appears on the globe that
+students drag from side to side.
+
+When you add a stop, the editor stores both pictures, both dates and the bar along with the view.
+
+Tips:
+
+- **Daily pictures have clouds.** Step through nearby days until both sides are clear.
+- **Use the same time of year on both sides**, so seasons do not look like change.
+- **Landsat and the sharper view come from different satellites**, so their colors differ. Tell students to compare
+  shapes, not colors.
+
+## Add pictures to a stop
+
+Each stop can have up to four pictures. Under **Pictures**, press **Add a picture**, then either:
+
+- **Choose a picture file** from your computer. The editor shrinks it and stores it inside the lesson file, so
+  there is still only one file to upload. A typical photo ends up around 150 to 300 KB.
+- **Paste a web address** (starting with `https://`). The picture is loaded from that website each time, so it
+  only works while that site keeps it there and the school filter allows it.
+
+Then fill in:
+
+- **Caption** and **Credit**. A credit is required. Use pictures you are allowed to use: your own, or ones marked
+  public domain or openly licensed (NASA, USGS, Wikimedia Commons).
+- **Description**, for students who cannot see the picture.
+- **Show under the reading** puts it in the lesson panel.
+- **Pin it to the middle of the current view** puts a camera marker on the globe at the spot in the middle of
+  the screen. Students click the marker to see the picture. A picture can be both pinned and shown under the
+  reading.
+
+**Pictures and lesson links:** a link cannot carry a picture stored in the lesson file, and it only accepts web
+addresses from a short approved list (Wikimedia Commons, NASA, USGS, NOAA, the National Park Service and the
+Library of Congress). The editor tells you how many pictures a link left out. A published lesson has neither limit.
+
 Your draft is kept in the browser you are using, so closing the tab does not lose it. It is not saved anywhere
 else until you press **Save lesson file**.
 

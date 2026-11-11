@@ -31,6 +31,11 @@ const APP = {
   // The list of activities (guided tours). Each activity is its own JSON file; see docs/activities.md.
   activitiesIndex: 'activities/index.json',
 
+  // Pictures in lessons. A lesson that travels in a link may only load pictures from these
+  // hosts (a name matches itself and anything ending in ".name"). Published lessons may use any https address.
+  imageHosts: ['upload.wikimedia.org', 'nasa.gov', 'usgs.gov', 'noaa.gov', 'nps.gov', 'loc.gov'],
+  maxImagesPerStop: 4,
+
   // Lesson editor (the site with ?edit added): where a saved lesson file is uploaded to publish it.
   lessonUploadUrl: 'https://github.com/BuchananGCSC/GCSC_Earth/upload/main/app/activities',
 
@@ -51,7 +56,15 @@ APP.cesiumBase = `https://cdn.jsdelivr.net/npm/cesium@${APP.cesiumVersion}/Build
              'points' dots from a GeoJSON  (url, style: 'quakes' | 'volcanoes')
              'lines'  lines from a GeoJSON (url)
      scheme: 'webmercator' (standard web-map tiles) or 'geographic' (equirectangular)
-     url placeholders: {z} {x} {y}, and {date} = a recent UTC date (dateOffsetDays back)
+     url placeholders: {z} {x} {y}, and {time} for pictures that change with time (see below)
+     time (optional): the picture exists for more than one date, and gets a date or year control.
+        { type: 'date', min, max, daysBack | default }   any day from min to max (max defaults to today);
+                                                         {time} becomes the date, YYYY-MM-DD
+        { type: 'list', default, values: [[label, value], ...] }   a short list such as years;
+                                                         {time} becomes the value
+        In `note`, {date} is replaced by the chosen date or label.
+     urls (optional, with a date): [{ until, url }, ...] when different date ranges live at different addresses.
+     underlay (optional): id of another picture drawn underneath, for pictures with see-through areas.
      opacity: starting see-through level, 0-100 (tiles only; gives the layer a slider)
      scale:  a color key for a picture whose colors stand for numbers.
              stops = [value, color] pairs from low to high, ticks = values to label,
@@ -84,18 +97,35 @@ const WORLDS = {
         note: 'A cloud-free picture of Earth made from many satellite photos, with the shape of the sea floor shaded in.',
         credit: 'NASA EOSDIS GIBS (Blue Marble)', license: 'Public domain; credit NASA GIBS' },
       { id: 's2', name: 'Sharper satellite view', kind: 'tiles', scheme: 'webmercator', maxZoom: 13,
-        url: 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg',
-        note: 'Cloud-free satellite photos that stay sharp when you zoom in on a valley, a river or a city.',
-        credit: 'Sentinel-2 cloudless by EOX (contains modified Copernicus Sentinel data 2020)',
-        license: 'CC BY-NC-SA 4.0 for the 2020 mosaic; fine for classroom use, confirm before wider release' },
+        url: 'https://tiles.maps.eox.at/wmts/1.0.0/{time}/default/g/{z}/{y}/{x}.jpg',
+        time: { type: 'list', default: '2020', values: [['2016', 's2cloudless_3857'], ['2017', 's2cloudless-2017_3857'],
+          ['2018', 's2cloudless-2018_3857'], ['2019', 's2cloudless-2019_3857'], ['2020', 's2cloudless-2020_3857'],
+          ['2021', 's2cloudless-2021_3857'], ['2022', 's2cloudless-2022_3857'], ['2023', 's2cloudless-2023_3857'],
+          ['2024', 's2cloudless-2024_3857']] },
+        note: 'Cloud-free satellite photos from {date} that stay sharp when you zoom in on a valley, a river or a city.',
+        credit: 'Sentinel-2 cloudless by EOX (contains modified Copernicus Sentinel data)',
+        license: '2016: CC BY 4.0. 2017 and later: CC BY-NC-SA 4.0; fine for classroom use, confirm before wider release' },
       { id: 'usgs', name: 'Aerial photos (best in the USA)', kind: 'tiles', scheme: 'webmercator', maxZoom: 16,
         url: 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
         note: 'Photos taken from aircraft and satellites, detailed enough inside the USA to see single fields and roads.',
         credit: 'USGS The National Map', license: 'Public domain; credit USGS' },
-      { id: 'modis', name: 'Earth a few days ago', kind: 'tiles', scheme: 'webmercator', maxZoom: 9, dateOffsetDays: 3,
-        url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/{date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg',
-        note: 'What a NASA satellite really saw on {date}: clouds, storms, smoke and snow included.',
+      { id: 'modis', name: 'Earth on one day', kind: 'tiles', scheme: 'webmercator', maxZoom: 9,
+        url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/{time}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg',
+        time: { type: 'date', min: '2000-02-24', daysBack: 3 },
+        note: 'What a NASA satellite really saw on {date}: clouds, storms, smoke and snow included. Pick any day since 2000.',
         credit: 'NASA EOSDIS GIBS (MODIS Terra)', license: 'Public domain; credit NASA GIBS' },
+      { id: 'landsat', name: 'Landsat photos, 1985 to 2000', kind: 'tiles', scheme: 'webmercator', maxZoom: 12,
+        url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Landsat_WELD_CorrectedReflectance_TrueColor_Global_Annual/default/{time}/GoogleMapsCompatible_Level12/{z}/{y}/{x}.jpeg',
+        time: { type: 'list', default: '2000', values: [['1985', '1985-12-01'], ['1990', '1990-12-01'], ['2000', '2000-12-01']] },
+        note: 'Satellite photos joined into one picture for the years around {date}. Compare them with a newer picture to see what has changed.',
+        credit: 'NASA EOSDIS GIBS (Landsat WELD)', license: 'Public domain; credit NASA GIBS and USGS' },
+      { id: 'ice', name: 'Sea ice', kind: 'tiles', scheme: 'webmercator', maxZoom: 6, underlay: 'bm',
+        url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AMSRU2_Sea_Ice_Concentration_12km/default/{time}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png',
+        urls: [{ until: '2011-10-04', url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AMSRE_Sea_Ice_Concentration_12km/default/{time}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png' },
+               { until: null, url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AMSRU2_Sea_Ice_Concentration_12km/default/{time}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png' }],
+        time: { type: 'date', min: '2002-06-01', max: '2025-09-01', default: '2024-09-15' },
+        note: 'Ice floating on the sea on {date}, measured by satellites that can see through clouds and darkness. White and pale pink are solid ice; the colored fringe is water only partly covered by ice. The dark circle at the North Pole is a gap in the map. There are no measurements from October 2011 to June 2012.',
+        credit: 'NASA EOSDIS GIBS (AMSR-E and AMSR2 sea ice concentration)', license: 'Public domain; credit NASA GIBS' },
     ],
     overlays: [
       { id: 'geo', name: 'Geologic map', kind: 'tiles', scheme: 'webmercator', maxZoom: 10, tileSize: 512, opacity: 60,

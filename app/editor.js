@@ -22,7 +22,18 @@
   let sel = 0;                         // which stop is open in the form
 
   function blank() { return { id: '', idTouched: false, title: '', minutes: 15, summary: '', order: 100, standards: [], stops: [] }; }
-  function save() { try { localStorage.setItem(STORE, JSON.stringify({ draft, sel })); } catch (e) { /* storage unavailable */ } }
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify({ draft, sel })); }
+    catch (e) {   // usually: too many stored pictures for the browser's draft space
+      say('This draft is now too big for the browser to keep safe. Press "Save lesson file" so you do not lose it.');
+    }
+  }
+  // A picture as the editor holds it.
+  const cleanImage = (im) => ({
+    src: G.imageOk(im && im.src) ? im.src : '', caption: String((im && im.caption) || ''), credit: String((im && im.credit) || ''),
+    alt: String((im && im.alt) || ''), panel: !im || im.panel !== false,
+    pin: im && im.pin && Number.isFinite(im.pin.lon) && Number.isFinite(im.pin.lat) ? { lon: im.pin.lon, lat: im.pin.lat } : null,
+  });
   function restore() {
     try {
       const d = JSON.parse(localStorage.getItem(STORE) || 'null');
@@ -41,9 +52,12 @@
     d.standards = Array.isArray(obj.standards) ? obj.standards.map(String) : [];
     d.stops = (Array.isArray(obj.stops) ? obj.stops : []).map((st) => ({
       title: String(st.title || ''), body: String(st.body || 'earth'), base: String(st.base || ''),
+      time: st.time == null ? null : String(st.time),
+      compare: st.compare && typeof st.compare === 'object' ? { base: String(st.compare.base || ''), time: st.compare.time == null ? null : String(st.compare.time) } : null,
       layers: Array.isArray(st.layers) ? st.layers.map(String) : [], terrain: !!st.terrain,
       view: st.view && typeof st.view === 'object' ? st.view : null,
       text: String(st.text || ''), questions: Array.isArray(st.questions) ? st.questions.map(String) : [],
+      images: (Array.isArray(st.images) ? st.images : []).map(cleanImage).filter((im) => im.src).slice(0, APP.maxImagesPerStop),
     }));
     return d;
   }
@@ -51,10 +65,18 @@
   function toFile() {
     return {
       title: draft.title.trim(), minutes: draft.minutes, summary: draft.summary.trim(), order: draft.order, standards: draft.standards,
-      stops: draft.stops.map((st) => ({
-        title: st.title.trim(), body: st.body, base: st.base, layers: st.layers, terrain: st.terrain, view: st.view,
-        text: st.text.trim(), questions: st.questions.map((q) => q.trim()).filter(Boolean),
-      })),
+      stops: draft.stops.map((st) => {
+        const out = {
+          title: st.title.trim(), body: st.body, base: st.base, layers: st.layers, terrain: st.terrain, view: st.view,
+          text: st.text.trim(), questions: st.questions.map((q) => q.trim()).filter(Boolean),
+        };
+        if (st.time) out.time = st.time;                      // the date or year of the picture, when it has one
+        if (st.compare) out.compare = st.compare;             // a second picture across a divider
+        const pics = (st.images || []).filter((im) => im.src).map((im) => ({
+          src: im.src, caption: im.caption.trim(), credit: im.credit.trim(), alt: im.alt.trim(), panel: im.panel, pin: im.pin }));
+        if (pics.length) out.images = pics;
+        return out;
+      }),
     };
   }
 
@@ -63,11 +85,13 @@
     const w = WORLDS[st.body];
     if (!w || !st.view) return 'No view stored yet.';
     const base = w.base.find((b) => b.id === st.base);
+    const when = (t) => (!t ? '' : /^\d{4}-\d{2}-\d{2}$/.test(t) ? ' on ' + t : ' ' + t);
+    const other = st.compare ? w.base.find((b) => b.id === st.compare.base) : null;
     const layers = st.layers.map((item) => { const o = w.overlays.find((x) => x.id === item.split('.')[0]); return o ? o.name : null; }).filter(Boolean);
     const v = st.view;
     const where = `${Math.abs(v.lat).toFixed(1)}° ${v.lat >= 0 ? 'N' : 'S'}, ${Math.abs(v.lon).toFixed(1)}° ${v.lon >= 0 ? 'E' : 'W'}`;
     const far = v.range == null ? 'whole globe' : v.range >= 1e6 ? `from ${(v.range / 1e6).toFixed(1)} thousand km` : `from ${Math.round(v.range / 1000)} km`;
-    return [w.name, base ? base.name : null, layers.length ? layers.join(', ') : 'nothing added', st.terrain ? '3D terrain' : null, `${where}, ${far}`]
+    return [w.name, base ? base.name + when(st.time) : null, other ? 'compared with ' + other.name + when(st.compare.time) : null, layers.length ? layers.join(', ') : 'nothing added', st.terrain ? '3D terrain' : null, `${where}, ${far}`]
       .filter(Boolean).join(' · ');
   }
 
@@ -83,6 +107,13 @@
       if (!st.title.trim()) warn.push(`${n} has no title.`);
       if (!st.text.trim()) warn.push(`${n} has no reading.`);
       if (!st.questions.some((q) => q.trim())) warn.push(`${n} has no question.`);
+      (st.images || []).forEach((im, pi) => {
+        const m = `${n}, picture ${pi + 1}`;
+        if (!im.src) stop.push(`${m} has no picture chosen. Choose one or remove it.`);
+        else if (!im.credit.trim()) stop.push(`${m} needs a credit line.`);
+        if (im.src && !im.panel && !im.pin) warn.push(`${m} is not shown anywhere: tick "Show under the reading" or pin it.`);
+        if (im.src && !im.alt.trim() && !im.caption.trim()) warn.push(`${m} has no caption or description.`);
+      });
     });
     if (!draft.summary.trim()) warn.push('The lesson has no one-line summary for the lesson list.');
     return { stop, warn };
@@ -139,10 +170,17 @@
     const p = problems();
     if (!draft.stops.length || draft.stops.some((st) => !st.view) || !draft.title.trim()) { say('No link yet. ' + p.stop.filter((t) => !t.includes('file name')).join(' ')); return; }
     const f = toFile();
+    let dropped = 0;
+    for (const st of f.stops) {
+      const keep = (st.images || []).filter((im) => G.imageHostAllowed(im.src));
+      dropped += (st.images || []).length - keep.length;
+      if (keep.length) st.images = keep; else delete st.images;
+    }
     const data = await G.packLesson({ title: f.title, stops: f.stops });
     const url = location.origin + location.pathname + '#lesson=' + data;
     const size = url.length.toLocaleString('en-US');
-    const long = url.length > 8000 ? ' It is very long, and some apps cut long links short: test it where you plan to post it.' : '';
+    const lost = dropped ? ` ${dropped} picture${dropped === 1 ? ' was' : 's were'} left out: a link can only carry pictures from web addresses at ${APP.imageHosts.join(', ')}.` : '';
+    const long = lost + (url.length > 8000 ? ' It is very long, and some apps cut long links short: test it where you plan to post it.' : '');
     const done = `Anyone who opens it gets this lesson. It is not added to the site's lesson list, and it will not change if you edit the lesson later.${long}`;
     const box = $('#ed-link');
     const fallback = () => { box.hidden = false; box.value = url; box.focus(); box.select(); say(`Copy the link in the box (Command + C). It is ${size} characters long. ${done}`); };
@@ -173,6 +211,64 @@
     r.onload = () => { try { load(JSON.parse(String(r.result)), file.name.replace(/\.json$/i, ''), 'your computer'); } catch (e) { say('That file could not be read as a lesson.'); } };
     r.onerror = () => say('That file could not be read.');
     r.readAsText(file);
+  }
+
+  /* ------------------------------------------------------------ pictures */
+  // Shrink a chosen picture file in the browser and keep it inside the lesson as a "data:" address.
+  function readPicture(file, done) {
+    if (!file || !/^image\//.test(file.type)) { say('Choose a picture file (JPEG or PNG).'); return; }
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const MAX = 1100, k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      const g = c.getContext('2d');
+      g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);      // JPEG has no see-through areas
+      g.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      done(c.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); say('That file could not be read as a picture.'); };
+    img.src = url;
+  }
+  const whereWords = (p) => `${Math.abs(p.lat).toFixed(2)}° ${p.lat >= 0 ? 'N' : 'S'}, ${Math.abs(p.lon).toFixed(2)}° ${p.lon >= 0 ? 'E' : 'W'}`;
+
+  function pictureForm(st, im, pi) {
+    const stored = im.src.startsWith('data:');
+    const fileBox = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', hidden: true });
+    fileBox.addEventListener('change', () => readPicture(fileBox.files[0], (data) => { im.src = data; save(); render(); say(`Picture added and shrunk to about ${Math.round(data.length * 0.75 / 1024)} KB. It is stored inside the lesson file.`); }));
+    const urlBox = el('input', { type: 'text', autocomplete: 'off', spellcheck: 'false', placeholder: 'or paste a web address (https://…)', 'aria-label': `Web address of picture ${pi + 1}` });
+    urlBox.value = stored ? '' : im.src;
+    urlBox.addEventListener('change', () => {
+      const v = urlBox.value.trim();
+      if (v && !/^https:\/\/\S+$/i.test(v)) { say('A picture address must start with https://'); return; }
+      im.src = v; save(); render();
+    });
+    let about = null;
+    if (stored) about = `Stored inside the lesson file (about ${Math.round(im.src.length * 0.75 / 1024)} KB).`;
+    else if (im.src && !G.imageHostAllowed(im.src)) about = `Loaded from another website each time. It will show in a published lesson, but lesson links only allow pictures from ${APP.imageHosts.join(', ')}.`;
+    else if (im.src) about = 'Loaded from another website each time. It works in published lessons and in lesson links.';
+    const thumb = im.src ? el('img', { class: 'ed-thumb', src: im.src, alt: '', referrerpolicy: 'no-referrer' }) : null;
+    if (thumb) thumb.addEventListener('error', () => { thumb.replaceWith(el('p', { class: 'fine warn', text: 'This picture could not be loaded from that address.' })); });
+    const panelBox = el('input', { type: 'checkbox', checked: im.panel });
+    panelBox.addEventListener('change', () => { im.panel = panelBox.checked; save(); refreshChecks(); });
+    const pinHere = () => { const v = G.captureStop().view; im.pin = { lon: v.lon, lat: v.lat }; save(); render(); say(`Picture ${pi + 1} pinned at the middle of the current view.`); };
+    return el('div', { class: 'ed-pic' },
+      el('div', { class: 'ed-pic-head' }, el('b', { text: `Picture ${pi + 1}` }),
+        el('button', { type: 'button', class: 'ed-mini', 'aria-label': `Remove picture ${pi + 1}`, title: 'Remove', text: '×', onclick: () => { st.images.splice(pi, 1); save(); render(); } })),
+      thumb,
+      el('div', { class: 'ed-row' }, el('button', { type: 'button', text: im.src ? 'Choose a different file…' : 'Choose a picture file…', onclick: () => fileBox.click() }), fileBox),
+      urlBox,
+      about ? el('p', { class: 'fine', text: about }) : null,
+      field('Caption', textInput(im.caption, (v) => { im.caption = v; }, { maxlength: 300 })),
+      field('Credit', textInput(im.credit, (v) => { im.credit = v; }, { maxlength: 200, placeholder: 'Who made it, and where it is from' }), 'Required. Use pictures you are allowed to use.'),
+      field('Description', textInput(im.alt, (v) => { im.alt = v; }, { maxlength: 300 }), 'For students who cannot see the picture. Optional if the caption says it.'),
+      el('label', { class: 'row' }, panelBox, el('span', { text: 'Show under the reading' })),
+      im.pin
+        ? el('div', null, el('p', { class: 'fine', text: `Pinned on the globe at ${whereWords(im.pin)}. Students click the marker to see it.` }),
+            el('div', { class: 'ed-row' }, el('button', { type: 'button', text: 'Move pin to the middle of the view', onclick: pinHere }),
+              el('button', { type: 'button', text: 'Remove pin', onclick: () => { im.pin = null; save(); render(); } })))
+        : el('div', { class: 'ed-row' }, el('button', { type: 'button', text: 'Pin it to the middle of the current view', onclick: pinHere })));
   }
 
   /* ------------------------------------------------------------ the form */
@@ -263,6 +359,10 @@
           el('button', { type: 'button', text: 'Use the current view', title: 'Store what the globe is showing now as this stop\'s view', onclick: recapture }),
           el('button', { type: 'button', text: 'Show this view', disabled: !st.view, onclick: () => G.applyStopDef(st) })),
         field('Reading', textArea(st.text, (v) => { st.text = v; }, { rows: 7 }), 'Leave a blank line between paragraphs.'),
+        el('span', { class: 'ed-label', text: 'Pictures' }),
+        el('div', { class: 'ed-pics' }, ...(st.images || []).map((im, pi) => pictureForm(st, im, pi))),
+        el('button', { type: 'button', text: 'Add a picture', disabled: (st.images || []).length >= APP.maxImagesPerStop,
+          onclick: () => { (st.images = st.images || []).push(cleanImage({})); save(); render(); } }),
         el('span', { class: 'ed-label', text: 'Questions' }), qs,
         el('button', { type: 'button', text: 'Add a question', onclick: () => { st.questions.push(''); save(); render(); const all = pane.querySelectorAll('.ed-q textarea'); if (all.length) all[all.length - 1].focus(); } })));
     }

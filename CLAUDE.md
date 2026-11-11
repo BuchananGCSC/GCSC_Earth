@@ -18,6 +18,8 @@ A browser globe for **intro-level Earth/space science students** to study geolog
 - **Activities are topic-based** JSON files in `app/activities/`, listed in `index.json`, each with an empty `standards` field for later Indiana/NGSS alignment. Format: `docs/activities.md`. New activities need no code changes. On screen they are called "lessons".
 - **Teachers author lessons in the built-in editor** (`/editor/`, which is the app with `?edit`; code in `app/editor.js`, loaded only then). It captures the globe's state as a stop and downloads the lesson file; the teacher uploads it to `app/activities/` on GitHub. Guide: `docs/lesson-editor.md`. The editor's draft lives in localStorage.
 - **Lessons can travel in a link** (`#lesson=1.<data>`: the lesson JSON, deflate-compressed, base64url). Made by the editor's "Copy a link" button, they run without being published. Their content is untrusted: `cleanLesson()` cuts it to size, it is rendered as plain text only, and the panel labels it "Lesson from a link".
+- **Change over time:** a base picture may have a `time` (a date or a short list of years; see `app/config.js`), chosen in the Controls tab and stored in links as `base=id@time`. "Compare two pictures" puts a second picture right of a draggable divider (`cmp=id@time~pos`; Cesium `splitDirection`). Lesson stops store `time` and `compare`. Dated sources: MODIS daily (2000 on), Sentinel-2 cloudless yearly (2016-2024), Landsat WELD (1985/1990/2000), AMSR sea ice (2002-2025, two addresses by date range, Blue Marble underlay).
+- **Lesson pictures:** a stop may carry up to four, shown under the reading and/or pinned to the globe. A picture is stored inside the lesson JSON as a resized data URL (made by the editor; one file to upload) or loaded from an https address. Lessons from links may only load pictures from `APP.imageHosts`; published lessons may use any https host. Every picture needs a credit.
 - **The lesson list is generated:** `scripts/build-activity-index.py` writes `index.json` from the lesson files, during the Pages deploy and by hand for local testing. Unreadable files are skipped with a warning.
 - Never commit API tokens (the Phase 0 page takes a Cesium ion token pasted in at run time).
 - **Student-facing wording is intro level:** plain names for layers, one sentence on what each shows.
@@ -35,5 +37,5 @@ A browser globe for **intro-level Earth/space science students** to study geolog
 0. Benchmark and choose the engine — done.
 1. MVP globe: curated layers, Earth/Moon/Mars, search, shareable links, Lite mode — done, live.
 2. Tour/activity system, lesson editor, lessons in links, measure tool, Moon and Mars terrain — done, live.
-3. All eight planned lessons are written; wording awaits teacher review. Still unbuilt: swipe compare, a date slider for the daily imagery, a terrain-stretch slider.
+3. All eight planned lessons plus "Change over time" are written; wording awaits teacher review. Date controls and the compare divider are built. Still unbuilt: a terrain-stretch slider; comparing overlays (such as the geologic map) across the divider.
 4. Pilot with one class section.

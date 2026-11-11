@@ -71,6 +71,7 @@
       <section aria-labelledby="h-base">
         <h2 id="h-base">Picture</h2>
         <div id="base-list" class="layer-list" role="radiogroup" aria-labelledby="h-base"></div>
+        <div id="cmp-block" class="cmp-block"></div>
       </section>
 
       <section id="overlay-section" aria-labelledby="h-over">
@@ -116,6 +117,13 @@
       <button type="button" data-nav="north" aria-label="Put north at the top" title="North at the top">N</button>
       <button type="button" data-nav="home"  aria-label="Show the whole globe" title="Show the whole globe">&#x25CE;</button>
       <button type="button" data-nav="help"  aria-label="How to move" title="How to move">?</button>
+    </div>
+
+    <div id="split" hidden>
+      <span id="split-left" class="split-label"></span>
+      <span id="split-right" class="split-label"></span>
+      <div id="split-bar" role="slider" tabindex="0" aria-label="Divider between the two pictures. Drag it, or use the left and right arrow keys."
+           aria-valuemin="5" aria-valuemax="95" aria-valuenow="50"><span aria-hidden="true">&#x2194;</span></div>
     </div>
 
     <div id="readout" aria-hidden="true"></div>

@@ -76,6 +76,12 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .layer.on .extra { display: block; }
 .slider { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
 .slider input { flex: 1; accent-color: var(--accent); }
+.time-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.time-row input[type=date], .time-row select, .cmp-block select { padding: 5px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; color-scheme: dark; }
+.time-row .mini { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font-size: 12.5px; }
+.time-row .mini:disabled { opacity: .4; cursor: default; }
+.cmp-block { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.cmp-block select { width: 100%; margin: 4px 0 6px; }
 .key-bar { height: 14px; border-radius: 4px; border: 1px solid rgba(0,0,0,.5); margin-top: 4px; }
 .key-ticks { position: relative; height: 18px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .key-ticks span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
@@ -101,6 +107,10 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 h2.act-title { font-size: 17px; text-transform: none; letter-spacing: 0; color: var(--text); margin: 2px 0 8px; outline: none; }
 #act-body p { margin: 0 0 8px; }
 #act-body .q { font-weight: 600; margin-top: 12px; }
+figure.pic { margin: 10px 0; }
+figure.pic img, #info img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
+figure.pic figcaption { font-size: 13.5px; margin-top: 4px; }
+#info img { margin-bottom: 6px; }
 #act-body textarea, #act-body input[type=text], #act-export { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--line);
   background: var(--bg); color: var(--text); font: inherit; resize: vertical; }
 #act-body .review { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
@@ -140,6 +150,10 @@ h2.act-title { font-size: 17px; text-transform: none; letter-spacing: 0; color: 
 .ed-mini { width: 28px; height: 28px; flex: none; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); line-height: 1; }
 .ed-view { font-size: 13px; color: var(--muted); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin: 10px 0 0; }
 .ed-q { display: flex; gap: 4px; align-items: flex-start; margin-bottom: 6px; }
+.ed-pic { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; margin-bottom: 8px; background: var(--panel-2); }
+.ed-pic-head { display: flex; align-items: center; justify-content: space-between; }
+.ed-pic input[type=text] { margin-top: 6px; }
+.ed-thumb { display: block; max-width: 100%; max-height: 120px; border-radius: 6px; border: 1px solid var(--line); margin-top: 6px; }
 .ed-checks { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--warn); }
 .ed-checks li.stop { color: #ff9d8a; }
 .ed-checks li.ok { color: #8fe3a2; list-style: none; margin-left: -18px; }
@@ -171,6 +185,14 @@ h2.act-title { font-size: 17px; text-transform: none; letter-spacing: 0; color: 
 #nav .cap:first-child { margin-top: 0; }
 #nav button[data-nav^="tilt"] { font-size: 13px; }
 
+#split { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+#split-bar { position: absolute; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: #fff; box-shadow: 0 0 4px rgba(0,0,0,.8);
+  pointer-events: auto; cursor: ew-resize; touch-action: none; }
+#split-bar span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%;
+  background: #fff; color: #06222c; display: grid; place-items: center; font-size: 18px; box-shadow: 0 0 6px rgba(0,0,0,.6); }
+#split-bar:focus-visible span { outline: 3px solid var(--accent); }
+.split-label { position: absolute; top: 12px; background: rgba(11,20,24,.85); color: var(--text); padding: 4px 9px; border-radius: 6px; font-size: 13px;
+  max-width: 42%; margin: 0 10px; }
 #readout { position: absolute; left: 12px; bottom: 28px; z-index: 4; background: rgba(11,20,24,.8);
   padding: 4px 8px; border-radius: 6px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; pointer-events: none; }
 #readout:empty { display: none; }

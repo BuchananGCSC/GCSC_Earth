@@ -1,0 +1,124 @@
+{
+  "title": "Change over time",
+  "minutes": 20,
+  "summary": "Compare the same place years apart.",
+  "order": 28,
+  "standards": [],
+  "stops": [
+    {
+      "title": "Sea ice at the top of the world",
+      "body": "earth",
+      "base": "ice",
+      "time": "2005-09-15",
+      "compare": {
+        "base": "ice",
+        "time": "2024-09-15"
+      },
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -160,
+        "lat": 80,
+        "range": 6500000,
+        "pitch": -90
+      },
+      "text": "The Arctic Ocean is covered by floating ice. The ice grows every winter and shrinks every summer. It is at its smallest in the middle of September.\n\nThe globe is split by a white bar. Left of the bar shows the ice on September 15, 2005. Right of the bar shows the same day in 2024. Drag the bar from side to side to compare.\n\nWhite and pale pink are solid ice. The colored fringe is water that is only partly covered by ice. The dark circle at the North Pole is a gap in the map, not open water.",
+      "questions": [
+        "Drag the bar slowly across the Arctic. Describe how the ice in 2024 is different from the ice in 2005.",
+        "Why is September a good month for comparing one year with another?"
+      ]
+    },
+    {
+      "title": "A sea that dried up",
+      "body": "earth",
+      "base": "modis",
+      "time": "2001-08-20",
+      "compare": {
+        "base": "modis",
+        "time": "2025-08-20"
+      },
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": 59.5,
+        "lat": 45,
+        "range": 750000,
+        "pitch": -90
+      },
+      "text": "The Aral Sea, in central Asia, was once the fourth largest lake in the world. Starting in the 1960s, most of the water from the two rivers that fed it was taken to water farm fields.\n\nLeft of the bar is a satellite photo from August 2001. Right of the bar is the same place in August 2025.",
+      "questions": [
+        "Drag the bar across the lake. Describe what changed between 2001 and 2025.",
+        "Where did the water go? What do you think the pale ground is where the lake used to be?"
+      ]
+    },
+    {
+      "title": "A forest cut down",
+      "body": "earth",
+      "base": "modis",
+      "time": "2001-07-21",
+      "compare": {
+        "base": "modis",
+        "time": "2025-07-21"
+      },
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -63,
+        "lat": -10.3,
+        "range": 650000,
+        "pitch": -90
+      },
+      "text": "This is the state of Rondônia in Brazil, at the southern edge of the Amazon rainforest. Dark green is forest. Pale green and tan are land cleared for cattle and crops.\n\nClearing usually starts along a road and spreads out from it. From above, the roads and clearings make a pattern like the bones of a fish.\n\nLeft of the bar is July 2001. Right of the bar is July 2025.",
+      "questions": [
+        "Drag the bar across the view. About how much of the dark green forest in the 2001 picture is gone by 2025?",
+        "Find a place where the forest edge is a straight line. What might explain a straight edge?"
+      ]
+    },
+    {
+      "title": "A glacier in retreat",
+      "body": "earth",
+      "base": "landsat",
+      "time": "1985",
+      "compare": {
+        "base": "s2",
+        "time": "2024"
+      },
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -147.0,
+        "lat": 61.1,
+        "range": 110000,
+        "pitch": -90
+      },
+      "text": "Columbia Glacier in Alaska flows down from the mountains into the sea. Around 1980 it began to shrink back quickly, and it has been retreating ever since.\n\nLeft of the bar is a satellite picture from about 1985. Right of the bar is 2024. The two pictures were taken by different satellites, so the colors do not match. Look at the shapes instead: bluish-white ice, dark water, and green or brown land.",
+      "questions": [
+        "Drag the bar to find the end of the glacier in each picture. Then use the ↔ measure button. About how far has the end of the glacier moved back?",
+        "When a glacier that ends in the sea retreats, what takes the place of the ice?"
+      ]
+    },
+    {
+      "title": "Your turn",
+      "body": "earth",
+      "base": "landsat",
+      "time": "2000",
+      "compare": {
+        "base": "s2",
+        "time": "2024"
+      },
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -86.15,
+        "lat": 39.77,
+        "range": 90000,
+        "pitch": -90
+      },
+      "text": "This is Indianapolis. Left of the bar is about the year 2000. Right of the bar is 2024.\n\nNow choose a place of your own. Use Find a place on the Controls tab to go to a city, a lake, a coast or a river you are curious about. The bar stays on the globe, so you can compare the two years anywhere.\n\nOn the Controls tab you can also change the year on either side.",
+      "questions": [
+        "What place did you choose? Describe one change you can see between the two pictures.",
+        "Is the change you found caused by people, by nature, or by both? Explain."
+      ]
+    }
+  ]
+}

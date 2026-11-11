@@ -46,12 +46,15 @@ Add `&stop=3` to open at the third stop.
 | `order` | Place in the lesson list; lower numbers come first. Optional (default 100). |
 | `standards` | Empty for now. A place to list Indiana or NGSS standards later. The app does not show it. |
 | `body` | `earth`, `moon` or `mars`. |
-| `base` | The picture. Earth: `bm` (Earth from space), `s2` (sharper satellite), `usgs` (aerial photos), `modis` (a few days ago). Moon: `lro`, `lola` (heights in color). Mars: `viking`, `mola` (heights in color). |
+| `base` | The picture. Earth: `bm` (Earth from space), `s2` (sharper satellite), `usgs` (aerial photos), `modis` (one day, any date since 2000), `landsat` (1985 to 2000), `ice` (sea ice). Moon: `lro`, `lola` (heights in color). Mars: `viking`, `mola` (heights in color). |
+| `time` | Optional. The date or year of the picture, for pictures that have one: a date such as `"2012-09-16"` for `modis` and `ice`, or a year such as `"2019"` for `s2` (2016 to 2024) and `landsat` (1985, 1990, 2000). |
+| `compare` | Optional. `{ "base": "s2", "time": "2024" }` puts a second picture to the right of a draggable bar. The stop's own picture is on the left. |
 | `layers` | Up to three of `geo`, `plates`, `quakes`, `volc` (Earth only). `geo.50` sets the geologic map to 50% solid. |
 | `terrain` | `true` for 3D terrain (any world). |
 | `view` | Where the camera looks. `lon` and `lat` in degrees (west and south are negative). `range` is the distance from the camera to that point in metres; `null` shows the whole globe. `pitch` is the tilt: `-90` looks straight down, `-45` looks at an angle. Optional `heading` turns the view (0 = north at the top). |
 | `text` | The reading. Separate paragraphs with `\n\n`. Plain text only. |
 | `questions` | Zero or more questions. Each gets an answer box. |
+| `images` | Optional, up to four per stop. Each is `{ "src", "caption", "credit", "alt", "panel", "pin" }`. `src` is an `https://` address or a `data:image/...;base64,` picture made by the editor. `panel` (default true) shows it under the reading. `pin` is `{ "lon", "lat" }` for a marker on the globe, or `null`. |
 
 The ids for `base` and `layers` come from `app/config.js`.
 

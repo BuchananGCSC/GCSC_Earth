@@ -9,7 +9,9 @@ of geology layers. Static site, no accounts, no build step.
 ## What it does
 
 - Earth, Moon and Mars, switched from the panel.
-- Earth pictures: a cloud-free view, a sharper satellite view, US aerial photos, and a recent daily satellite image.
+- Earth pictures: a cloud-free view, a sharper satellite view (any year 2016 to 2024), US aerial photos, a daily
+  satellite image for any day since 2000, Landsat pictures from 1985 to 2000, and sea ice (2002 to 2025).
+- Compare two pictures or two dates with a bar that drags across the globe.
 - Layers to add: geologic map (click for the rock at that spot), plate boundaries, earthquakes of the past
   30 days (click a dot), and volcanoes (click a triangle). Up to three at once.
 - Optional 3D terrain on all three worlds, with heights stretched 2x. With it on, the readout under the pointer
@@ -21,8 +23,9 @@ of geology layers. Static site, no accounts, no build step.
 - Lite quality by default; "Sharper picture" is optional.
 - A distance-measure tool (the ↔ button), on all three worlds.
 - **Activities:** guided tours with a reading and questions at each stop. Students copy or download their answers
-  at the end. Eight so far: plate boundaries, volcanoes and hotspots, mountains and rifts, rocks and geologic maps,
-  rivers and deltas, glaciers and ice sheets, coastlines and karst, and other worlds.
+  at the end. Nine so far: plate boundaries, volcanoes and hotspots, mountains and rifts, rocks and geologic maps,
+  rivers and deltas, glaciers and ice sheets, coastlines and karst, change over time, and other worlds.
+- **Pictures in lessons:** under the reading, or pinned to a place on the globe.
 - **A lesson editor for teachers** at https://buchanangcsc.github.io/GCSC_Earth/editor/. A lesson can be published
   to the site's list, or shared as a link that carries the whole lesson. See
   [docs/lesson-editor.md](docs/lesson-editor.md).

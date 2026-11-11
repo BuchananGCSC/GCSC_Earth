@@ -25,7 +25,9 @@
 
   /* ------------------------------------------------------------ state + link */
   // overlays: Map of overlay id -> opacity (0-100). view: camera position or null (= starting view).
-  const state = { body: 'earth', base: null, overlays: new Map(), terrain: false, quality: 'lite', view: null };
+  // baseTime: the date or year chosen for the picture (null when the picture has only one).
+  // cmp: a second picture shown to the right of a movable divider: { base, time, pos (0-1) } or null.
+  const state = { body: 'earth', base: null, baseTime: null, cmp: null, overlays: new Map(), terrain: false, quality: 'lite', view: null };
   // An activity named in the link, waiting to be opened: { id, stop (1-based), keepView }.
   let linkActivity = null;
   // A whole lesson packed into the link (made in the lesson editor): { data, stop, keepView }.
@@ -39,7 +41,12 @@
     const body = p.get('body');
     state.body = WORLDS[body] ? body : 'earth';
     const w = world();
-    state.base = byId(w.base, p.get('base')) ? p.get('base') : w.base[0].id;
+    const [baseId, baseTime] = (p.get('base') || '').split('@');
+    state.base = byId(w.base, baseId) ? baseId : w.base[0].id;
+    state.baseTime = timeOf(byId(w.base, state.base), baseTime);
+    const cm = /^([a-z0-9-]+)(?:@([^~]*))?(?:~(\d+))?$/.exec(p.get('cmp') || '');
+    state.cmp = cm && byId(w.base, cm[1])
+      ? { base: cm[1], time: timeOf(byId(w.base, cm[1]), cm[2]), pos: clamp((Number(cm[3]) || 50) / 100, 0.05, 0.95) } : null;
     state.overlays = new Map();
     for (const part of (p.get('layers') || '').split(',')) {
       const [id, op] = part.split('.');
@@ -69,7 +76,8 @@
       const v = state.view;
       p.push('view=' + [v.lon.toFixed(4), v.lat.toFixed(4), Math.round(v.height), v.heading.toFixed(1), v.pitch.toFixed(1)].join(','));
     }
-    p.push('base=' + state.base);
+    p.push('base=' + state.base + (state.baseTime ? '@' + state.baseTime : ''));
+    if (state.cmp) p.push('cmp=' + state.cmp.base + (state.cmp.time ? '@' + state.cmp.time : '') + '~' + Math.round(state.cmp.pos * 100));
     if (state.overlays.size) {
       p.push('layers=' + [...state.overlays].map(([id, op]) => byId(world().overlays, id).opacity ? `${id}.${op}` : id).join(','));
     }
@@ -122,9 +130,33 @@
   }
 
   function recentDate(daysBack) { return new Date(Date.now() - daysBack * 864e5).toISOString().slice(0, 10); }
-  const niceDate = (def) => new Date(recentDate(def.dateOffsetDays || 3) + 'T12:00:00Z')
-    .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-  const fillDate = (text, def) => text.split('{date}').join(recentDate(def.dateOffsetDays || 3));
+  /* Pictures that exist for more than one time (see `time` in config.js). A time is kept as a
+     short text: a date "2012-09-16" or a list label such as "2019". */
+  const today = () => new Date().toISOString().slice(0, 10);
+  function timeDefault(def) {
+    const t = def && def.time;
+    if (!t) return null;
+    return t.type === 'list' ? t.default : (t.default || recentDate(t.daysBack || 3));
+  }
+  function timeValid(def, v) {
+    const t = def && def.time;
+    if (!t || typeof v !== 'string') return false;
+    if (t.type === 'list') return t.values.some(([label]) => label === v);
+    return /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) && v >= t.min && v <= (t.max || today());
+  }
+  const timeOf = (def, v) => (def && def.time ? (timeValid(def, v) ? v : timeDefault(def)) : null);
+  function timeLabel(def, v) {
+    if (!def || !def.time || !v) return '';
+    if (def.time.type === 'list') return v;
+    return new Date(v + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+  function urlFor(def, v) {
+    if (!def.time) return def.url;
+    const tv = timeOf(def, v);
+    const value = def.time.type === 'list' ? def.time.values.find(([label]) => label === tv)[1] : tv;
+    const url = def.urls ? (def.urls.find((u) => !u.until || tv <= u.until) || def.urls[def.urls.length - 1]).url : def.url;
+    return url.split('{time}').join(value);
+  }
 
   /* ------------------------------------------------------------ 3D terrain (keyless)
      Elevation arrives as image tiles with the height packed into the colors.
@@ -240,12 +272,12 @@
 
   /* ------------------------------------------------------------ the globe */
   let viewer = null, ell = null, build = 0;
-  let live = { base: null, overlays: new Map() };     // what is currently drawn
+  let live = { pics: [], overlays: new Map() };       // what is currently drawn
   const tileErrors = new Map();
 
-  function tileProvider(def) {
+  function tileProvider(def, time) {
     const p = new C.UrlTemplateImageryProvider({
-      url: fillDate(def.url, def), maximumLevel: def.maxZoom, credit: def.credit,
+      url: urlFor(def, time), maximumLevel: def.maxZoom, credit: def.credit,
       tileWidth: def.tileSize || 256, tileHeight: def.tileSize || 256,
       tilingScheme: def.scheme === 'geographic' ? new C.GeographicTilingScheme({ ellipsoid: ell }) : new C.WebMercatorTilingScheme({ ellipsoid: ell }),
     });
@@ -263,9 +295,10 @@
   function buildViewer() {
     const mine = ++build;
     if (viewer) { try { viewer.destroy(); } catch (e) { /* already gone */ } viewer = null; }
-    live = { base: null, overlays: new Map() };
+    live = { pics: [], overlays: new Map() };
     closeInfo();
     measure.prims = null; measure.pts = [];
+    pinPrim = null;
     if (measure.on) setMeasure(true);
 
     const w = world(), q = APP.quality[state.quality];
@@ -302,7 +335,7 @@
     ctl.maximumZoomDistance = ell.maximumRadius * 8;
 
     // Layers
-    setBase(state.base);
+    drawPictures();
     for (const [id] of state.overlays) addOverlay(id, mine);
     applyTerrain();
 
@@ -334,6 +367,7 @@
       if (left === 0 && mine === build) { $('#loading').hidden = true; stopLoading(); }
     });
     setTimeout(() => { if (mine === build) $('#loading').hidden = true; }, 20000);
+    drawPins();
     scene.requestRender();
   }
 
@@ -343,12 +377,78 @@
   }
 
   /* ------------------------------------------------------------ layers */
+  // Draw the picture layers at the bottom of the stack: the chosen picture, and when comparing,
+  // a second picture to the right of the divider. A picture with see-through areas gets its underlay first.
+  function drawPictures() {
+    const stack = viewer.imageryLayers, w = world();
+    for (const lay of live.pics) stack.remove(lay, true);
+    live.pics = [];
+    const left = byId(w.base, state.base), right = state.cmp ? byId(w.base, state.cmp.base) : null;
+    let at = 0;
+    const add = (def, time, side) => {
+      const lay = stack.addImageryProvider(tileProvider(def, time), at++);
+      lay.splitDirection = side;
+      live.pics.push(lay);
+    };
+    const L = right ? C.SplitDirection.LEFT : C.SplitDirection.NONE;
+    if (left.underlay) add(byId(w.base, left.underlay), null, L);
+    add(left, state.baseTime, L);
+    if (right) {
+      if (right.underlay) add(byId(w.base, right.underlay), null, C.SplitDirection.RIGHT);
+      add(right, state.cmp.time, C.SplitDirection.RIGHT);
+      viewer.scene.splitPosition = state.cmp.pos;
+    }
+    drawDivider();
+    viewer.scene.requestRender();
+  }
   function setBase(id) {
     const def = byId(world().base, id);
-    state.base = def.id;
-    if (live.base) viewer.imageryLayers.remove(live.base, true);
-    live.base = viewer.imageryLayers.addImageryProvider(tileProvider(def), 0);
+    state.base = def.id; state.baseTime = timeDefault(def);
+    drawPictures();
+  }
+  function setBaseTime(v) {
+    state.baseTime = timeOf(byId(world().base, state.base), v);
+    drawPictures();
+  }
+  // Switch comparing on or off. The comparison starts as the same picture at an earlier time when it has one.
+  function setCompare(on) {
+    if (!on) { state.cmp = null; drawPictures(); return; }
+    const def = byId(world().base, state.base), t = def.time;
+    let time = null;
+    if (t && t.type === 'list') time = t.values[0][0] === state.baseTime ? t.values[t.values.length - 1][0] : t.values[0][0];
+    else if (t) {
+      const earlier = (Number(state.baseTime.slice(0, 4)) - 20) + state.baseTime.slice(4);
+      time = timeValid(def, earlier) ? earlier : (Number(t.min.slice(0, 4)) + 1) + state.baseTime.slice(4);
+      if (!timeValid(def, time)) time = t.min;
+    }
+    state.cmp = { base: def.id, time, pos: 0.5 };
+    drawPictures();
+  }
+
+  // The divider bar and the two labels, kept in step with state.cmp.
+  function sideLabel(id, time) {
+    const def = byId(world().base, id);
+    return def.name + (def.time ? ' · ' + timeLabel(def, time) : '');
+  }
+  function drawDivider() {
+    const box = $('#split');
+    box.hidden = !state.cmp;
+    if (!state.cmp) return;
+    const pct = (state.cmp.pos * 100).toFixed(2) + '%';
+    $('#split-bar').style.left = pct;
+    $('#split-bar').setAttribute('aria-valuenow', Math.round(state.cmp.pos * 100));
+    $('#split-left').style.right = (100 - state.cmp.pos * 100).toFixed(2) + '%';
+    $('#split-right').style.left = pct;
+    $('#split-left').textContent = sideLabel(state.base, state.baseTime);
+    $('#split-right').textContent = sideLabel(state.cmp.base, state.cmp.time);
+  }
+  function moveDivider(pos, done) {
+    if (!state.cmp || !viewer) return;
+    state.cmp.pos = clamp(pos, 0.05, 0.95);
+    viewer.scene.splitPosition = state.cmp.pos;
+    drawDivider();
     viewer.scene.requestRender();
+    if (done) writeLink();
   }
 
   let triangleImg = null;
@@ -550,6 +650,10 @@
       ], [safe ? link(d.url, d.def.moreLabel) : null]);
       return;
     }
+    if (d && d.kind === 'photo') {
+      showInfo(d.im.caption || 'Picture', [], [pictureEl(d.im), d.im.credit ? el('p', { class: 'fine', text: 'Credit: ' + d.im.credit }) : null]);
+      return;
+    }
     if (d && d.kind === 'volcano') {
       showInfo(d.name || 'Volcano', [
         ['Kind', d.type], ['Country', d.country],
@@ -661,6 +765,57 @@
     scene.requestRender();
   }
 
+  /* ------------------------------------------------------------ pictures in lessons
+     A stop can carry pictures: shown under the reading, pinned to a place on the globe, or both.
+     A picture is either stored inside the lesson file (a "data:" address made by the lesson editor)
+     or loaded from an https address. */
+  const imageOk = (src) => typeof src === 'string' && (/^https:\/\/[^\s]+$/i.test(src) || /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(src));
+  function imageHostAllowed(src) {
+    try {
+      const host = new URL(src).hostname.toLowerCase();
+      return new URL(src).protocol === 'https:' && APP.imageHosts.some((h) => host === h || host.endsWith('.' + h));
+    } catch (e) { return false; }
+  }
+  function imagesOf(st) {
+    return (Array.isArray(st.images) ? st.images : []).filter((im) => im && imageOk(im.src)).slice(0, APP.maxImagesPerStop);
+  }
+  const pinOf = (im) => (im.pin && Number.isFinite(im.pin.lon) && Number.isFinite(im.pin.lat) ? im.pin : null);
+  function pictureEl(im) {
+    const img = el('img', { src: im.src, alt: im.alt || im.caption || '', loading: 'lazy', referrerpolicy: 'no-referrer' });
+    img.addEventListener('error', () => img.replaceWith(el('p', { class: 'fine warn', text: 'This picture could not be loaded.' })));
+    return img;
+  }
+  function figureEl(im) {
+    return el('figure', { class: 'pic' }, pictureEl(im),
+      el('figcaption', null, im.caption ? el('span', { text: im.caption }) : null,
+        im.credit ? el('span', { class: 'fine', text: (im.caption ? ' ' : '') + 'Credit: ' + im.credit }) : null,
+        pinOf(im) ? el('span', { class: 'fine', text: ' Look for its marker on the globe.' }) : null));
+  }
+
+  // Markers on the globe for the current stop's pinned pictures.
+  let pinList = [], pinPrim = null, pinIcon = null;
+  function photoIcon() {
+    if (pinIcon) return pinIcon;
+    const c = document.createElement('canvas'); c.width = c.height = 40;
+    const g = c.getContext('2d');
+    g.beginPath(); g.arc(20, 20, 17, 0, Math.PI * 2); g.fillStyle = '#5fc3e4'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#ffffff'; g.stroke();
+    g.fillStyle = '#06222c'; g.fillRect(10, 14, 20, 14); g.fillRect(15, 11, 8, 4);          // camera body
+    g.beginPath(); g.arc(20, 21, 4.5, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill();     // lens
+    return (pinIcon = c);
+  }
+  function drawPins() {
+    if (!viewer) return;
+    if (pinPrim) { viewer.scene.primitives.remove(pinPrim); pinPrim = null; }
+    if (pinList.length) {
+      pinPrim = viewer.scene.primitives.add(new C.BillboardCollection());
+      for (const im of pinList) {
+        pinPrim.add({ position: C.Cartesian3.fromDegrees(im.pin.lon, im.pin.lat, 0, ell), image: photoIcon(), scale: 0.7, id: { kind: 'photo', im } });
+      }
+    }
+    viewer.scene.requestRender();
+  }
+  function setPins(list) { pinList = list; drawPins(); }
+
   /* ------------------------------------------------------------ activities (guided tours)
      An activity is a JSON file: a list of stops, each with a view, layers, a short
      reading and questions. Answers stay in this browser tab until the student copies
@@ -756,11 +911,20 @@
         const v = st.view && typeof st.view === 'object' ? st.view : {};
         return {
           title: text(st.title, 120), body: text(st.body, 20), base: text(st.base, 20),
+          time: st.time == null ? null : text(st.time, 20),
+          compare: st.compare && typeof st.compare === 'object'
+            ? { base: text(st.compare.base, 20), time: st.compare.time == null ? null : text(st.compare.time, 20) } : null,
           layers: (Array.isArray(st.layers) ? st.layers : []).slice(0, 6).map((x) => text(x, 20)),
           terrain: !!st.terrain,
           view: { lon: n(v.lon), lat: n(v.lat), range: n(v.range), pitch: n(v.pitch), heading: n(v.heading) },
           text: text(st.text, 6000),
           questions: (Array.isArray(st.questions) ? st.questions : []).slice(0, 12).map((q) => text(q, 600)),
+          // A lesson from a link may only use pictures from the hosts listed in config.js.
+          images: (Array.isArray(st.images) ? st.images : []).filter((im) => im && typeof im.src === 'string' && imageHostAllowed(im.src))
+            .slice(0, APP.maxImagesPerStop).map((im) => ({
+              src: text(im.src, 600), caption: text(im.caption, 300), credit: text(im.credit, 200), alt: text(im.alt, 300), panel: im.panel !== false,
+              pin: im.pin && typeof im.pin === 'object' && n(im.pin.lon) != null && n(im.pin.lat) != null ? { lon: n(im.pin.lon), lat: n(im.pin.lat) } : null,
+            })),
         };
       }),
     };
@@ -793,6 +957,7 @@
   function leaveActivity() {
     const wasPreview = !!(act.def && act.def.preview);
     act.def = null; act.review = false;
+    setPins([]);
     $('#app').classList.remove('in-activity');
     $('#act-panel').hidden = true; $('#act-bar').hidden = true;
     renderAll(); writeLink();
@@ -811,11 +976,16 @@
       if (d && wanted.size < APP.maxOverlays) wanted.set(id, clamp(Number(op) || d.opacity || 100, 10, 100));
     }
     const terrain = !!st.terrain && !!w.terrain;
+    const baseTime = timeOf(byId(w.base, base), st.time);
+    const cs = st.compare && typeof st.compare === 'object' && byId(w.base, st.compare.base) ? st.compare : null;
+    const cmp = cs ? { base: cs.base, time: timeOf(byId(w.base, cs.base), cs.time), pos: 0.5 } : null;
+    const samePictures = base === state.base && baseTime === state.baseTime
+      && JSON.stringify(cmp && [cmp.base, cmp.time]) === JSON.stringify(state.cmp && [state.cmp.base, state.cmp.time]);
     if (body !== state.body) {
-      Object.assign(state, { body, base, overlays: wanted, terrain, view: null });
+      Object.assign(state, { body, base, baseTime, cmp, overlays: wanted, terrain, view: null });
       buildViewer();
     } else {
-      if (base !== state.base) setBase(base);
+      if (!samePictures) { Object.assign(state, { base, baseTime, cmp }); drawPictures(); }
       for (const id of [...state.overlays.keys()]) if (!wanted.has(id)) removeOverlay(id);
       state.overlays = wanted;
       for (const [id, op] of wanted) {
@@ -849,7 +1019,8 @@
       view = { lon: r3(deg(c.longitude)), lat: r3(deg(c.latitude)), range: null, pitch: -90 };
     }
     return {
-      body: state.body, base: state.base,
+      body: state.body, base: state.base, time: state.baseTime,
+      compare: state.cmp ? { base: state.cmp.base, time: state.cmp.time } : null,
       layers: [...state.overlays].map(([id, op]) => byId(world().overlays, id).opacity ? `${id}.${op}` : id),
       terrain: state.terrain, view,
     };
@@ -895,6 +1066,7 @@
       $('#act-progress').textContent = `${d.preview ? 'Preview · ' : d.packed ? 'Lesson from a link · ' : ''}${d.title} · Stop ${act.i + 1} of ${n}`;
       $('#act-title').textContent = st.title || `Stop ${act.i + 1}`;
       for (const para of String(st.text || '').split(/\n\s*\n/)) if (para.trim()) body.append(el('p', { text: para.trim() }));
+      for (const im of imagesOf(st)) if (im.panel !== false) body.append(figureEl(im));
       questionsOf(st).forEach((q, qi) => {
         const key = `${act.i}.${qi}`;
         const box = el('textarea', { rows: 3, maxlength: 2000, 'aria-label': 'Your answer', placeholder: 'Type your answer here' });
@@ -907,6 +1079,7 @@
     $('#act-next').hidden = act.review;
     $('#act-next').textContent = act.i === n - 1 ? 'Finish' : 'Next';
     $('#act-view').hidden = act.review;
+    setPins(act.review ? [] : imagesOf(d.stops[act.i]).filter(pinOf));
     $('#act-step').textContent = act.review ? '' : `${act.i + 1} of ${n}`;
     $('#lesson-scroll').scrollTop = 0;
     if (ui.tab === 'lesson') $('#act-title').focus({ preventScroll: true });
@@ -956,8 +1129,52 @@
     if (id === state.body) return;
     state.body = id;
     const w = world();
-    state.base = w.base[0].id; state.overlays = new Map(); state.terrain = false; state.view = null;
+    state.base = w.base[0].id; state.baseTime = timeDefault(w.base[0]); state.cmp = null;
+    state.overlays = new Map(); state.terrain = false; state.view = null;
     renderAll(); buildViewer(); writeLink();
+  }
+
+  // A date box (with year-back and year-forward buttons) or a short list, for a picture that has more than one time.
+  function timeControl(def, value, label, onPick) {
+    const t = def.time;
+    if (t.type === 'list') {
+      const pick = el('select', { 'aria-label': label }, ...t.values.map(([name]) => el('option', { value: name, text: name })));
+      pick.value = value;
+      pick.addEventListener('change', () => onPick(pick.value));
+      return el('div', { class: 'time-row' }, el('span', { class: 'fine', text: 'Year' }), pick);
+    }
+    const box = el('input', { type: 'date', min: t.min, max: t.max || today(), 'aria-label': label });
+    box.value = value;
+    box.addEventListener('change', () => { if (timeValid(def, box.value)) onPick(box.value); else box.value = value; });
+    const step = (years) => {
+      const v = (Number(value.slice(0, 4)) + years) + value.slice(4);
+      if (timeValid(def, v)) onPick(v);
+    };
+    const can = (years) => timeValid(def, (Number(value.slice(0, 4)) + years) + value.slice(4));
+    return el('div', { class: 'time-row' }, box,
+      el('button', { type: 'button', class: 'mini', 'aria-label': 'One year earlier', title: 'One year earlier', disabled: !can(-1), text: '−1 yr', onclick: () => step(-1) }),
+      el('button', { type: 'button', class: 'mini', 'aria-label': 'One year later', title: 'One year later', disabled: !can(1), text: '+1 yr', onclick: () => step(1) }));
+  }
+
+  // "Compare" block under the picture list: a second picture, or the same picture at another time.
+  function renderCompare() {
+    const box = $('#cmp-block'), w = world(); box.textContent = '';
+    const tick = el('input', { type: 'checkbox', checked: !!state.cmp });
+    tick.addEventListener('change', () => { setCompare(tick.checked); renderLayers(); writeLink(); });
+    box.append(el('label', { class: 'row' }, tick, el('span', null, 'Compare two pictures ', el('span', { class: 'fine', text: '(drag the bar on the globe)' }))));
+    if (!state.cmp) return;
+    const def = byId(w.base, state.cmp.base);
+    const pick = el('select', { 'aria-label': 'Picture on the right side' }, ...w.base.map((b) => el('option', { value: b.id, text: b.name })));
+    pick.value = state.cmp.base;
+    pick.addEventListener('change', () => {
+      const d = byId(w.base, pick.value);
+      state.cmp = { base: d.id, time: timeDefault(d), pos: state.cmp.pos };
+      drawPictures(); renderLayers(); writeLink();
+    });
+    box.append(el('p', { class: 'fine', text: 'Left of the bar: the picture chosen above. Right of the bar:' }), pick);
+    if (def.time) box.append(timeControl(def, state.cmp.time, 'Date of the picture on the right', (v) => {
+      state.cmp.time = timeOf(def, v); drawPictures(); renderLayers(); writeLink();
+    }));
   }
 
   // A color bar with labeled values, for pictures whose colors stand for numbers.
@@ -988,9 +1205,12 @@
       baseBox.append(el('div', { class: 'layer' + (on ? ' on' : '') },
         el('label', null,
           el('input', { type: 'radio', name: 'base', value: def.id, checked: on, onchange: () => { setBase(def.id); renderLayers(); writeLink(); } }),
-          el('span', null, el('span', { text: def.name }), el('p', { class: 'fine note', text: def.note.split('{date}').join(niceDate(def)) }))),
+          el('span', null, el('span', { text: def.name }),
+            el('p', { class: 'fine note', text: def.note.split('{date}').join(timeLabel(def, on ? state.baseTime : timeDefault(def))) }))),
+        on && def.time ? el('div', { class: 'extra' }, timeControl(def, state.baseTime, 'Date of the picture', (v) => { setBaseTime(v); renderLayers(); writeLink(); })) : null,
         on && def.scale ? colorKey(def.scale) : null));
     }
+    renderCompare();
 
     $('#overlay-section').hidden = !w.overlays.length;
     const box = $('#overlay-list'); box.textContent = '';
@@ -1160,6 +1380,17 @@
       if (b && viewer && NAV[b.dataset.nav]) NAV[b.dataset.nav]();
     });
     $('#info-close').addEventListener('click', closeInfo);
+    const bar = $('#split-bar');
+    bar.addEventListener('pointerdown', (ev) => {
+      ev.preventDefault(); bar.setPointerCapture(ev.pointerId);
+      const at = (e) => { const r = $('#globe').getBoundingClientRect(); return (e.clientX - r.left) / r.width; };
+      const move = (e) => moveDivider(at(e), false);
+      const up = (e) => { bar.removeEventListener('pointermove', move); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up); moveDivider(at(e), true); };
+      bar.addEventListener('pointermove', move); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
+    });
+    bar.addEventListener('keydown', (ev) => {
+      if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { ev.preventDefault(); moveDivider(state.cmp.pos + (ev.key === 'ArrowRight' ? 0.03 : -0.03), true); }
+    });
     $('#measure-again').addEventListener('click', () => setMeasure(true));
     $('#measure-done').addEventListener('click', () => setMeasure(false));
     $('#act-next').addEventListener('click', () => stepActivity(1));
@@ -1226,7 +1457,7 @@
   // For testing from the browser console, and for the lesson editor (editor.js).
   window.geoGlobe = {
     get viewer() { return viewer; }, state,
-    api: { el, clamp, banner, getJson, setTab, captureStop, applyStopDef, openLesson, packLesson,
+    api: { el, clamp, banner, getJson, setTab, captureStop, applyStopDef, openLesson, packLesson, imageOk, imageHostAllowed,
       get lessons() { return actIndex; }, get ready() { return !!viewer; } },
   };
 
