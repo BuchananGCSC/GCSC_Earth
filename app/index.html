@@ -9,34 +9,46 @@
 </head>
 <body>
 <div id="app">
-  <aside id="panel" aria-label="Globe controls">
+  <aside id="panel" aria-label="Lessons and controls">
     <header class="panel-head">
       <h1>Geoscience Globe</h1>
-      <button id="panel-close" class="icon-btn" type="button" aria-label="Hide the controls" title="Hide the controls">&#x2039;</button>
+      <button id="panel-close" class="icon-btn" type="button" aria-label="Hide the panel" title="Hide the panel">&#x2039;</button>
     </header>
 
-    <div class="panel-body">
-      <section id="sec-acts" aria-labelledby="h-acts" hidden>
-        <h2 id="h-acts">Activities</h2>
-        <div id="act-list" class="act-list"></div>
-      </section>
+    <div class="tabs" role="tablist" aria-label="Panel">
+      <button type="button" role="tab" id="tab-lesson" aria-controls="pane-lesson" aria-selected="false" tabindex="-1">Lesson</button>
+      <button type="button" role="tab" id="tab-controls" aria-controls="pane-controls" aria-selected="true">Controls <span id="tab-count" class="badge" hidden></span></button>
+    </div>
 
-      <section id="act-panel" aria-labelledby="act-title" hidden>
-        <p class="fine" id="act-progress"></p>
-        <h2 id="act-title" class="act-title" tabindex="-1"></h2>
-        <div id="act-body"></div>
-        <div class="act-buttons">
-          <button type="button" id="act-back">Back</button>
-          <button type="button" id="act-next" class="primary">Next</button>
-        </div>
-        <div class="act-links">
-          <button type="button" id="act-view" class="linkish">Go back to this stop's view</button>
-          <button type="button" id="act-leave" class="linkish">Leave the activity</button>
-        </div>
-        <p id="act-msg" class="fine" role="status"></p>
-        <textarea id="act-export" readonly hidden aria-label="Your answers" rows="6"></textarea>
-      </section>
+    <div id="pane-lesson" class="pane" role="tabpanel" aria-labelledby="tab-lesson" hidden>
+      <div id="lesson-scroll" class="pane-scroll">
+        <section id="sec-acts" aria-labelledby="h-acts">
+          <h2 id="h-acts">Lessons</h2>
+          <div id="act-list" class="act-list"></div>
+          <p id="act-none" class="fine">No lessons are available right now. Use the Controls tab to explore the globe.</p>
+        </section>
 
+        <section id="act-panel" aria-labelledby="act-title" hidden>
+          <p class="fine" id="act-progress"></p>
+          <h2 id="act-title" class="act-title" tabindex="-1"></h2>
+          <div id="act-body"></div>
+          <div class="act-links">
+            <button type="button" id="act-view" class="linkish">Go back to this stop's view</button>
+            <button type="button" id="act-controls" class="linkish">Open the controls</button>
+            <button type="button" id="act-leave" class="linkish">Leave the lesson</button>
+          </div>
+          <p id="act-msg" class="fine" role="status"></p>
+          <textarea id="act-export" readonly hidden aria-label="Your answers" rows="6"></textarea>
+        </section>
+      </div>
+      <div id="act-bar" class="act-bar" hidden>
+        <button type="button" id="act-back">Back</button>
+        <span id="act-step" class="fine" aria-hidden="true"></span>
+        <button type="button" id="act-next" class="primary">Next</button>
+      </div>
+    </div>
+
+    <div id="pane-controls" class="pane pane-scroll" role="tabpanel" aria-labelledby="tab-controls">
       <section id="sec-world" aria-labelledby="h-world">
         <h2 id="h-world">World</h2>
         <div id="worlds" class="segmented" role="group" aria-labelledby="h-world"></div>
@@ -85,7 +97,7 @@
 
   <main id="stage">
     <div id="globe" aria-label="Globe. Drag to move, scroll to zoom."></div>
-    <button id="panel-open" class="icon-btn float" type="button" aria-label="Show the controls" title="Show the controls" hidden>&#x203A;</button>
+    <button id="panel-open" class="icon-btn float" type="button" aria-label="Show the panel" title="Show the panel" hidden>&#x203A;</button>
 
     <div id="nav" role="group" aria-label="Move the view">
       <button type="button" data-nav="zoom-in"  aria-label="Zoom in"  title="Zoom in">+</button>

@@ -57,8 +57,9 @@ straight-down view (`pitch` -90) the `lon` and `lat` are the same and `range` eq
 
 ## What students see
 
-- The reading and questions replace the top of the panel. The layer controls stay available below.
-- **Back** and **Next** move between stops. **Go back to this stop's view** resets the globe.
+- The panel has two tabs. **Lesson** holds the reading and questions; **Controls** holds everything that changes
+  the globe. Starting a lesson opens the Lesson tab. The app calls activities "lessons" on screen.
+- **Back** and **Next** stay pinned at the bottom of the Lesson tab. **Go back to this stop's view** resets the globe.
 - After the last stop, a review page lists every answer, asks for a name, and offers **Copy my answers** and
   **Download my answers** (a text file).
 - Answers are kept in the browser tab while it is open, so a reload does not lose them. They are never sent

@@ -17,7 +17,15 @@ body { font-size: 15px; line-height: 1.4; overflow: hidden; }
 .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;
   border-bottom: 1px solid var(--line); }
 h1 { font-size: 18px; margin: 0; letter-spacing: .2px; }
-.panel-body { overflow-y: auto; padding: 4px 14px 20px; min-height: 0; }
+.tabs { display: flex; flex: none; border-bottom: 1px solid var(--line); background: var(--bg); }
+.tabs button { flex: 1; padding: 10px 8px; background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted); font-weight: 600; }
+.tabs button:hover { color: var(--text); }
+.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); background: var(--panel); }
+.badge { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+  font-size: 12px; line-height: 18px; font-weight: 700; vertical-align: 1px; }
+.pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pane-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 14px 20px; }
+.pane.pane-scroll { display: block; }
 section { padding: 12px 0; border-bottom: 1px solid var(--line); }
 section:last-of-type { border-bottom: 0; }
 h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 0 0 8px; }
@@ -85,7 +93,11 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .act-list button:hover { border-color: var(--accent); }
 .act-list b { display: block; }
 .act-list span { font-size: 12.5px; color: var(--muted); }
-#act-panel { background: var(--panel-2); margin: 10px -14px 0; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+#act-panel { padding-top: 12px; }
+.act-bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px;
+  border-top: 1px solid var(--line); background: var(--panel-2); }
+.act-bar button:not(.primary) { padding: 8px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); }
+.act-bar button:disabled { opacity: .45; cursor: default; }
 h2.act-title { font-size: 17px; text-transform: none; letter-spacing: 0; color: var(--text); margin: 2px 0 8px; outline: none; }
 #act-body p { margin: 0 0 8px; }
 #act-body .q { font-weight: 600; margin-top: 12px; }
@@ -97,10 +109,10 @@ h2.act-title { font-size: 17px; text-transform: none; letter-spacing: 0; color: 
 .act-buttons { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .act-buttons button:not(.primary) { padding: 8px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); }
 .act-buttons button:disabled { opacity: .45; cursor: default; }
-.act-links { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 10px; }
+.act-links { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); }
 .linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; font-size: 13.5px; }
 #act-export { margin-top: 8px; font-size: 12.5px; }
-#app.in-activity #sec-acts, #app.in-activity #sec-world { display: none; }
+#app.in-activity #sec-acts { display: none; }
 
 #measure { left: 50%; bottom: 64px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 14px; }
 #measure button { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); }

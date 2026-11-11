@@ -676,19 +676,20 @@
         el('b', { text: a.title }),
         el('span', { text: [a.minutes ? `About ${a.minutes} minutes` : null, a.summary].filter(Boolean).join(' · ') })));
     }
-    $('#sec-acts').hidden = !actIndex.length;
+    $('#act-none').hidden = actIndex.length > 0;
   }
 
   async function startActivity(id, stopNo, keepView) {
-    if (!actIndex.some((a) => a.id === id)) { banner('That activity is not on this site.'); return; }
+    if (!actIndex.some((a) => a.id === id)) { banner('That lesson is not on this site.'); return; }
     let def;
     try { def = await getJson(APP.activitiesIndex.replace(/[^/]*$/, '') + id + '.json'); }
-    catch (e) { banner('That activity could not be loaded. Check the internet connection.'); return; }
-    if (!def || !Array.isArray(def.stops) || !def.stops.length) { banner('That activity has no stops yet.'); return; }
+    catch (e) { banner('That lesson could not be loaded. Check the internet connection.'); return; }
+    if (!def || !Array.isArray(def.stops) || !def.stops.length) { banner('That lesson has no stops yet.'); return; }
     act.def = Object.assign({}, def, { id });
     act.i = clamp(stopNo - 1, 0, def.stops.length - 1); act.review = false;
     $('#app').classList.add('in-activity');
-    $('#act-panel').hidden = false;
+    $('#act-panel').hidden = false; $('#act-bar').hidden = false;
+    setTab('lesson');
     renderStop();
     if (!keepView) applyStop(); else writeLink();
   }
@@ -696,7 +697,7 @@
   function leaveActivity() {
     act.def = null; act.review = false;
     $('#app').classList.remove('in-activity');
-    $('#act-panel').hidden = true;
+    $('#act-panel').hidden = true; $('#act-bar').hidden = true;
     renderAll(); writeLink();
   }
 
@@ -786,8 +787,9 @@
     $('#act-next').hidden = act.review;
     $('#act-next').textContent = act.i === n - 1 ? 'Finish' : 'Next';
     $('#act-view').hidden = act.review;
-    $('.panel-body').scrollTop = 0;
-    $('#act-title').focus({ preventScroll: true });
+    $('#act-step').textContent = act.review ? '' : `${act.i + 1} of ${n}`;
+    $('#lesson-scroll').scrollTop = 0;
+    if (ui.tab === 'lesson') $('#act-title').focus({ preventScroll: true });
   }
 
   function stepActivity(dir) {
@@ -856,6 +858,10 @@
 
   function renderLayers() {
     const w = world();
+    const count = state.overlays.size, badge = $('#tab-count');
+    badge.hidden = !count; badge.textContent = count || '';
+    badge.title = count ? `${count} added to the globe` : '';
+    badge.setAttribute('aria-label', count ? `, ${count} added to the globe` : '');
     const baseBox = $('#base-list'); baseBox.textContent = '';
     for (const def of w.base) {
       const on = def.id === state.base;
@@ -996,6 +1002,19 @@
   /* ------------------------------------------------------------ start-up */
   function renderAll() { renderWorlds(); renderLayers(); renderOptions(); renderPlaces(); $('#overlay-msg').textContent = ''; }
 
+  // The panel has two tabs: Lesson (reading and questions) and Controls (everything that changes the globe).
+  const ui = { tab: 'controls' };
+  function setTab(name, focus) {
+    ui.tab = name === 'lesson' ? 'lesson' : 'controls';
+    for (const t of ['lesson', 'controls']) {
+      const on = t === ui.tab, tab = $('#tab-' + t);
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      $('#pane-' + t).hidden = !on;
+    }
+    if (focus) $('#tab-' + ui.tab).focus();
+  }
+
   function setPanel(open) {
     $('#app').classList.toggle('panel-hidden', !open);
     $('#panel-open').hidden = open;
@@ -1025,6 +1044,12 @@
     $('#act-back').addEventListener('click', () => stepActivity(-1));
     $('#act-view').addEventListener('click', () => { if (act.def && !act.review) applyStop(); });
     $('#act-leave').addEventListener('click', leaveActivity);
+    $('#act-controls').addEventListener('click', () => setTab('controls', true));
+    $('#tab-lesson').addEventListener('click', () => setTab('lesson'));
+    $('#tab-controls').addEventListener('click', () => setTab('controls'));
+    $('.tabs').addEventListener('keydown', (ev) => {
+      if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { ev.preventDefault(); setTab(ui.tab === 'lesson' ? 'controls' : 'lesson', true); }
+    });
     $('#hint-close').addEventListener('click', () => {
       $('#hint').hidden = true;
       try { localStorage.setItem('gg-hint-seen', '1'); } catch (e) { /* storage unavailable: show it again next time */ }
