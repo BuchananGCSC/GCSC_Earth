@@ -164,7 +164,7 @@
   function openFromSite(id) {
     if (!id) return;
     if (draft.stops.length && !window.confirm('Open this lesson? The one in the editor will be replaced.')) { render(); return; }
-    G.getJson(APP.activitiesIndex.replace(/[^/]*$/, '') + id + '.json').then((obj) => load(obj, id, 'the site'), () => say('That lesson could not be loaded.'));
+    G.getJson(APP.activitiesIndex.replace(/[^/]*$/, '') + id + '.json', true).then((obj) => load(obj, id, 'the site'), () => say('That lesson could not be loaded.'));
   }
   function openFromFile(file) {
     if (!file) return;

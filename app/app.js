@@ -111,9 +111,11 @@
 
   /* ------------------------------------------------------------ data files (fetched once) */
   const dataCache = new Map();
-  function getJson(url) {
+  // fresh: ask the server whether the file has changed instead of trusting the browser's saved copy
+  // (used for lessons, so a newly published lesson shows up without a hard refresh).
+  function getJson(url, fresh) {
     if (!dataCache.has(url)) {
-      dataCache.set(url, fetch(url).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      dataCache.set(url, fetch(url, fresh ? { cache: 'no-cache' } : undefined).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .catch((e) => { dataCache.delete(url); throw e; }));
     }
     return dataCache.get(url);
@@ -673,7 +675,7 @@
 
   async function loadActivities() {
     try {
-      const idx = await getJson(APP.activitiesIndex);
+      const idx = await getJson(APP.activitiesIndex, true);
       actIndex = (idx.activities || []).filter((a) => a && /^[a-z0-9-]{1,60}$/.test(a.id) && a.title);
     } catch (e) { actIndex = []; }
     const box = $('#act-list'); box.textContent = '';
@@ -688,7 +690,7 @@
   async function startActivity(id, stopNo, keepView) {
     if (!actIndex.some((a) => a.id === id)) { banner('That lesson is not on this site.'); return; }
     let def;
-    try { def = await getJson(APP.activitiesIndex.replace(/[^/]*$/, '') + id + '.json'); }
+    try { def = await getJson(APP.activitiesIndex.replace(/[^/]*$/, '') + id + '.json', true); }
     catch (e) { banner('That lesson could not be loaded. Check the internet connection.'); return; }
     if (!def || !Array.isArray(def.stops) || !def.stops.length) { banner('That lesson has no stops yet.'); return; }
     openLesson(Object.assign({}, def, { id }), stopNo, keepView);

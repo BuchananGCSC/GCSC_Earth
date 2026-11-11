@@ -102,17 +102,17 @@
     <button id="panel-open" class="icon-btn float" type="button" aria-label="Show the panel" title="Show the panel" hidden>&#x203A;</button>
 
     <div id="nav" role="group" aria-label="Move the view">
+      <span class="cap" aria-hidden="true">Zoom</span>
       <button type="button" data-nav="zoom-in"  aria-label="Zoom in"  title="Zoom in">+</button>
       <button type="button" data-nav="zoom-out" aria-label="Zoom out" title="Zoom out">&minus;</button>
-      <span class="gap"></span>
-      <button type="button" data-nav="tilt-up"   aria-label="Tilt toward the horizon" title="Tilt toward the horizon">&#x2934;</button>
-      <button type="button" data-nav="tilt-down" aria-label="Tilt to look straight down" title="Look straight down">&#x2935;</button>
-      <span class="gap"></span>
+      <span class="cap" aria-hidden="true">Tilt</span>
+      <button type="button" data-nav="tilt-up"   aria-label="Tilt toward the horizon" title="Tilt toward the horizon">&#x25B2;</button>
+      <button type="button" data-nav="tilt-down" aria-label="Tilt to look straight down" title="Tilt back to look straight down">&#x25BC;</button>
+      <span class="cap" aria-hidden="true">Turn</span>
       <button type="button" data-nav="turn-left"  aria-label="Turn left"  title="Turn left">&#x21BA;</button>
       <button type="button" data-nav="turn-right" aria-label="Turn right" title="Turn right">&#x21BB;</button>
-      <span class="gap"></span>
+      <span class="cap" aria-hidden="true">Tools</span>
       <button type="button" data-nav="measure" aria-label="Measure a distance" title="Measure a distance" aria-pressed="false">&#x2194;</button>
-      <span class="gap"></span>
       <button type="button" data-nav="north" aria-label="Put north at the top" title="North at the top">N</button>
       <button type="button" data-nav="home"  aria-label="Show the whole globe" title="Show the whole globe">&#x25CE;</button>
       <button type="button" data-nav="help"  aria-label="How to move" title="How to move">?</button>
@@ -138,7 +138,7 @@
         <li><b>Drag</b> to spin the globe.</li>
         <li><b>Scroll with two fingers</b> to zoom in and out.</li>
         <li><b>Hold Control and drag</b> to tilt.</li>
-        <li>Or use the <b>buttons on the right</b>. The &#x2194; button measures a distance.</li>
+        <li>Or use the <b>Zoom, Tilt and Turn buttons on the right</b>. The &#x2194; button measures a distance.</li>
       </ul>
       <button type="button" id="hint-close" class="primary">Got it</button>
     </div>

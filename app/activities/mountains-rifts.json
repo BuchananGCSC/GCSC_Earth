@@ -1,0 +1,107 @@
+{
+  "title": "Mountains and rifts",
+  "minutes": 20,
+  "summary": "How squeezing and stretching the crust shape the land.",
+  "order": 15,
+  "standards": [],
+  "stops": [
+    {
+      "title": "Young, tall mountains",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "plates"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": 84,
+        "lat": 29,
+        "range": 3200000,
+        "pitch": -70
+      },
+      "text": "The Himalaya began to rise about 50 million years ago, when the plate carrying India ran into Asia. The plates are still pushing together, so the mountains are still being pushed up.\n\nMount Everest, the highest point on Earth, is 8,849 meters above sea level.\n\nMove the pointer over the globe to read the height of the ground.",
+      "questions": [
+        "Use the ↔ measure button to measure the Himalaya from the west end to the east end. How long is the range?",
+        "Use the height readout to find the highest ground you can. What height did you find?"
+      ]
+    },
+    {
+      "title": "Old, worn-down mountains",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": true,
+      "view": {
+        "lon": -77.6,
+        "lat": 40.6,
+        "range": 350000,
+        "pitch": -55
+      },
+      "text": "The Appalachian Mountains formed about 300 million years ago, when continents collided to make one giant continent called Pangaea. They may once have been as tall as the Alps.\n\nSince then, rain, ice and rivers have been wearing them down. What is left in Pennsylvania are long ridges of hard rock with valleys of softer rock between them.",
+      "questions": [
+        "Use the height readout on a few ridge tops. How do these heights compare with the Himalaya?",
+        "The ridges make long curving stripes. What could bend flat layers of rock into shapes like these?"
+      ]
+    },
+    {
+      "title": "A continent splitting",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "plates",
+        "volc",
+        "quakes"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": 33.5,
+        "lat": -4,
+        "range": 2800000,
+        "pitch": -65
+      },
+      "text": "In East Africa the crust is being stretched. As it thins, long blocks of land drop down between cracks called faults. The result is a rift valley: a long, low valley with steep sides.\n\nMagma rises through the thin crust and builds volcanoes, including Kilimanjaro, the highest mountain in Africa. Water collects in the low ground and makes lakes.",
+      "questions": [
+        "Find the lakes in the rift. What shape are they? Why would lakes in a rift have that shape?",
+        "What evidence on the globe shows that the crust here is being pulled apart, not pushed together?"
+      ]
+    },
+    {
+      "title": "A rift that became a sea",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "plates"
+      ],
+      "terrain": false,
+      "view": {
+        "lon": 38,
+        "lat": 20,
+        "range": 2800000,
+        "pitch": -90
+      },
+      "text": "If a rift keeps widening, the land between drops below sea level and the ocean floods in. The Red Sea began this way about 30 million years ago, when Arabia started to pull away from Africa. It is still getting wider.\n\nGiven enough time, a narrow sea like this can grow into an ocean. The Atlantic Ocean started the same way.",
+      "questions": [
+        "Compare the two coastlines of the Red Sea. What do you notice about their shapes?",
+        "Put these in order from youngest stage to oldest stage of the same process: the Atlantic Ocean, the East African Rift, the Red Sea. Explain your order."
+      ]
+    },
+    {
+      "title": "Mountains made by stretching",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": true,
+      "view": {
+        "lon": -116.5,
+        "lat": 39.5,
+        "range": 700000,
+        "pitch": -55
+      },
+      "text": "Not all mountains come from plates colliding. In Nevada the crust has been stretched from east to west. It broke into long blocks. Some blocks tilted up to make mountain ranges, and the blocks between them dropped to make flat valleys called basins.\n\nGeologists call this region the Basin and Range.",
+      "questions": [
+        "Which direction do the mountain ranges run? Describe the pattern they make.",
+        "You have seen mountains made by squeezing (the Himalaya) and by stretching (Nevada). Describe one difference in how they look."
+      ]
+    }
+  ]
+}

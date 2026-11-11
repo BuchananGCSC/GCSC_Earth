@@ -34,6 +34,6 @@ A browser globe for **intro-level Earth/space science students** to study geolog
 
 0. Benchmark and choose the engine — done.
 1. MVP globe: curated layers, Earth/Moon/Mars, search, shareable links, Lite mode — done, live.
-2. Tour/activity system with the first three activities (volcanoes and hotspots, rocks and geologic maps, other worlds), plus a distance-measure tool — built; activity wording awaits teacher review.
-3. Remaining activities (plate boundaries, mountains and rifts, rivers and deltas, glaciers, coastlines and karst), swipe compare.
+2. Tour/activity system, lesson editor, lessons in links, measure tool, Moon and Mars terrain — done, live.
+3. All eight planned lessons are written; wording awaits teacher review. Still unbuilt: swipe compare, a date slider for the daily imagery, a terrain-stretch slider.
 4. Pilot with one class section.

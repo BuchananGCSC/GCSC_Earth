@@ -1,0 +1,113 @@
+{
+  "title": "Plate boundaries",
+  "minutes": 20,
+  "summary": "Three ways plates meet, and how to tell them apart.",
+  "order": 5,
+  "standards": [],
+  "stops": [
+    {
+      "title": "Earth's broken shell",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "plates",
+        "quakes"
+      ],
+      "terrain": false,
+      "view": {
+        "lon": -30,
+        "lat": 10,
+        "range": null,
+        "pitch": -90
+      },
+      "text": "Earth's outer shell is broken into giant slabs of rock called plates. The yellow lines are the edges of the plates. The plates move very slowly, about as fast as your fingernails grow.\n\nEach dot is an earthquake from the past 30 days. Drag the globe to look at different parts of the world.",
+      "questions": [
+        "Where do most earthquakes happen compared with the yellow lines?",
+        "Can you find any earthquakes far from a yellow line? Where?"
+      ]
+    },
+    {
+      "title": "Plates pulling apart",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "plates",
+        "quakes"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -25,
+        "lat": 5,
+        "range": 6500000,
+        "pitch": -90
+      },
+      "text": "Where two plates move away from each other, hot rock rises into the gap, melts, and hardens into new sea floor. This is called a divergent boundary.\n\nThe long underwater mountain range down the middle of the Atlantic Ocean is the Mid-Atlantic Ridge. New sea floor is made along it, and the Atlantic gets a few centimeters wider every year.",
+      "questions": [
+        "Compare the shape of the ridge with the coastlines of South America and Africa. What do you notice?",
+        "Look at the earthquake colors along the ridge. Are these earthquakes shallow or deep?"
+      ]
+    },
+    {
+      "title": "Plates colliding",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "plates",
+        "quakes"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": 84,
+        "lat": 29,
+        "range": 3000000,
+        "pitch": -55
+      },
+      "text": "Where two plates move toward each other, the boundary is called convergent. Here the plate carrying India is pushing north into Asia.\n\nBoth sides are thick continental rock, and neither one sinks easily. So the rock crumples and piles up. The result is the Himalaya, the highest mountains on Earth, and the high Tibetan Plateau behind them.\n\nMove the pointer over the globe. The readout at the bottom shows the height of the ground.",
+      "questions": [
+        "Use the height readout. About how high is the Tibetan Plateau? About how high are the plains of India just south of the mountains?",
+        "In your own words, why does pushing two continents together make mountains?"
+      ]
+    },
+    {
+      "title": "Plates sliding past each other",
+      "body": "earth",
+      "base": "s2",
+      "layers": [
+        "plates"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": -119.83,
+        "lat": 35.27,
+        "range": 200000,
+        "pitch": -50
+      },
+      "text": "Where two plates slide sideways past each other, the boundary is called a transform boundary. No new rock is made and none is destroyed. The plates stick, then slip suddenly, and that causes earthquakes.\n\nThis is the San Andreas Fault in California. The Pacific Plate, on the ocean side, is moving northwest past the North American Plate.",
+      "questions": [
+        "Find the long straight line the fault makes across the land. Describe what you see along it.",
+        "Los Angeles is on the Pacific Plate. San Francisco is on the North American Plate. What will happen to the distance between the two cities over millions of years?"
+      ]
+    },
+    {
+      "title": "Name that boundary",
+      "body": "earth",
+      "base": "bm",
+      "layers": [
+        "plates",
+        "quakes",
+        "volc"
+      ],
+      "terrain": true,
+      "view": {
+        "lon": 141,
+        "lat": 38,
+        "range": 2500000,
+        "pitch": -60
+      },
+      "text": "This is Japan. Use what you have learned to work out what kind of plate boundary lies just off its east coast.\n\nLook at the shape of the sea floor, where the volcanoes are, and how the earthquake colors change from the ocean toward the land.",
+      "questions": [
+        "Is this boundary divergent, convergent or transform? Give two pieces of evidence from the globe."
+      ]
+    }
+  ]
+}

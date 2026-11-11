@@ -21,7 +21,8 @@ of geology layers. Static site, no accounts, no build step.
 - Lite quality by default; "Sharper picture" is optional.
 - A distance-measure tool (the ↔ button), on all three worlds.
 - **Activities:** guided tours with a reading and questions at each stop. Students copy or download their answers
-  at the end. Three so far: volcanoes and hotspots, rocks and geologic maps, and other worlds.
+  at the end. Eight so far: plate boundaries, volcanoes and hotspots, mountains and rifts, rocks and geologic maps,
+  rivers and deltas, glaciers and ice sheets, coastlines and karst, and other worlds.
 - **A lesson editor for teachers** at https://buchanangcsc.github.io/GCSC_Earth/editor/. A lesson can be published
   to the site's list, or shared as a link that carries the whole lesson. See
   [docs/lesson-editor.md](docs/lesson-editor.md).

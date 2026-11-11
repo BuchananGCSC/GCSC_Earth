@@ -1,0 +1,99 @@
+{
+  "title": "Rivers and deltas",
+  "minutes": 20,
+  "summary": "How rivers wear land away in one place and build it in another.",
+  "order": 22,
+  "standards": [],
+  "stops": [
+    {
+      "title": "A river's bends",
+      "body": "earth",
+      "base": "usgs",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -91.15,
+        "lat": 33.3,
+        "range": 110000,
+        "pitch": -90
+      },
+      "text": "A river on flat land does not flow straight. It swings from side to side in wide bends called meanders.\n\nWater moves fastest on the outside of a bend, so it wears the bank away there. Water moves slowest on the inside of a bend, so it drops sand and mud there. Over time each bend grows.\n\nSometimes the river cuts through the narrow neck of a bend and takes the shortcut. The old bend is left behind as a curved lake called an oxbow lake.",
+      "questions": [
+        "Find a curved lake beside the Mississippi River. Explain how it formed.",
+        "Look in the farm fields on both sides for curved marks and stripes. What do they tell you about where the river used to flow?"
+      ]
+    },
+    {
+      "title": "A river builds land",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -89.3,
+        "lat": 29.15,
+        "range": 130000,
+        "pitch": -90
+      },
+      "text": "A river carries sand and mud, called sediment. When the river reaches the sea, the water slows down and drops its sediment. The pile of sediment builds new land called a delta.\n\nThis is the delta of the Mississippi River. The river splits into several channels, and each one builds its own finger of land out into the Gulf.",
+      "questions": [
+        "Describe the shape of this delta. Some people say it looks like a bird's foot. Do you agree?",
+        "Look at the ends of the channels. Where do you think new land is being built right now? Explain."
+      ]
+    },
+    {
+      "title": "The delta that named them all",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": 31.1,
+        "lat": 30.9,
+        "range": 520000,
+        "pitch": -90
+      },
+      "text": "This is the delta of the Nile River in Egypt. The ancient Greeks thought its triangle shape looked like their letter delta, which is written like a triangle. That is where the word comes from.\n\nEvery year for thousands of years, the Nile flooded and spread fresh mud across this land.",
+      "questions": [
+        "Use the ↔ measure button to measure across the delta along the coast. How wide is it?",
+        "The delta is green and the land around it is tan. Explain why."
+      ]
+    },
+    {
+      "title": "A river cuts down",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": true,
+      "view": {
+        "lon": -112.1,
+        "lat": 36.1,
+        "range": 150000,
+        "pitch": -45
+      },
+      "text": "Rivers build land in some places and wear it away in others. Here the Colorado River has cut down through layer after layer of rock to make the Grand Canyon. Most of the cutting happened in the last 5 or 6 million years.\n\nMove the pointer over the globe to read the height of the ground.",
+      "questions": [
+        "Use the height readout on the flat rim and then on the river at the bottom. About how deep is the canyon?",
+        "Use the ↔ measure button to measure the canyon from rim to rim. Is the canyon wider than it is deep?"
+      ]
+    },
+    {
+      "title": "A river close to home",
+      "body": "earth",
+      "base": "usgs",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -87.98,
+        "lat": 38.05,
+        "range": 70000,
+        "pitch": -90
+      },
+      "text": "The Wabash River forms the border between southern Indiana and Illinois before it joins the Ohio River. Like the Mississippi, it flows across flat land in wide bends.\n\nState borders that follow rivers were drawn where the river was at the time. Rivers move.",
+      "questions": [
+        "Find one piece of evidence that the Wabash has changed its path. Describe what you found and where.",
+        "A farmer owns land on the outside of a bend. Should the farmer be worried? Explain."
+      ]
+    }
+  ]
+}

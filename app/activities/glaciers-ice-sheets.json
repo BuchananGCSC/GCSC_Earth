@@ -1,0 +1,99 @@
+{
+  "title": "Glaciers and ice sheets",
+  "minutes": 20,
+  "summary": "How moving ice carves and builds the land, including Indiana.",
+  "order": 24,
+  "standards": [],
+  "stops": [
+    {
+      "title": "A land under ice",
+      "body": "earth",
+      "base": "bm",
+      "layers": [],
+      "terrain": true,
+      "view": {
+        "lon": -41,
+        "lat": 72,
+        "range": 4200000,
+        "pitch": -90
+      },
+      "text": "A glacier is a mass of ice that lasts all year and slowly flows under its own weight. The biggest glaciers are called ice sheets.\n\nThe Greenland ice sheet covers about four fifths of the island. In the middle it is about 3 kilometers thick. The ice flows slowly outward from the middle toward the coast.\n\nMove the pointer over the globe to read the height of the surface.",
+      "questions": [
+        "Use the height readout. About how high is the surface in the middle of the ice sheet? How high is it near the coast?",
+        "Where on Greenland can you see bare land? Why there?"
+      ]
+    },
+    {
+      "title": "A river of ice",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": true,
+      "view": {
+        "lon": 8.05,
+        "lat": 46.47,
+        "range": 45000,
+        "pitch": -55
+      },
+      "text": "In high mountains, snow piles up year after year and packs down into ice. The ice flows downhill through a valley, like a very slow river. This is a valley glacier.\n\nThis one is the Aletsch Glacier in Switzerland, the largest glacier in the Alps. The dark stripes on it are bands of broken rock that fell from the valley walls and are being carried along by the ice.",
+      "questions": [
+        "Use the ↔ measure button to measure the glacier from the top of the main ice stream to its lower end. How long is it?",
+        "Where does a dark stripe begin? What does that tell you about where the rock came from?"
+      ]
+    },
+    {
+      "title": "Valleys carved by ice",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": true,
+      "view": {
+        "lon": 6.6,
+        "lat": 61.1,
+        "range": 260000,
+        "pitch": -50
+      },
+      "text": "A river cuts a narrow valley shaped like the letter V. A glacier is much wider and heavier. It grinds its valley into a deep trough with steep walls and a wide floor, shaped like the letter U.\n\nDuring the last ice age, glaciers carved deep valleys along the coast of Norway. When the ice melted, the sea flooded in. A flooded glacial valley is called a fjord. This one is Sognefjord, the longest in Norway.",
+      "questions": [
+        "Use the ↔ measure button to measure the fjord from the open sea to its far end. How long is it?",
+        "Tilt the view and look along the fjord. Describe its walls."
+      ]
+    },
+    {
+      "title": "What the ice did to Indiana",
+      "body": "earth",
+      "base": "usgs",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -86.25,
+        "lat": 39.4,
+        "range": 230000,
+        "pitch": -90
+      },
+      "text": "During the ice ages, ice sheets spread south from Canada and covered most of Indiana more than once. The last one reached central Indiana about 20,000 years ago.\n\nThe ice scraped the land flat and, when it melted, left behind a thick blanket of clay, sand and gravel. That is why northern and central Indiana are so flat and so good for farming.\n\nThe hills of south-central Indiana, around Bloomington and Brown County, were never covered by ice.\n\nIn this photo, farm fields look pale and forest looks dark green. Indianapolis is the gray patch near the top.",
+      "questions": [
+        "Compare the land around Indianapolis with the land south of it. Describe two differences you can see.",
+        "Which part was covered by ice? What is your evidence?"
+      ]
+    },
+    {
+      "title": "Lakes left by the ice",
+      "body": "earth",
+      "base": "bm",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -84.5,
+        "lat": 45,
+        "range": 2600000,
+        "pitch": -90
+      },
+      "text": "Before the ice ages, the Great Lakes did not exist. Tongues of ice pushed down old river valleys and scraped them deeper and wider. When the ice melted back, starting about 14,000 years ago, the meltwater filled the basins.\n\nToday the Great Lakes hold about one fifth of all the fresh water on Earth's surface.",
+      "questions": [
+        "Use the ↔ measure button to measure Lake Michigan from north to south. How long is it?",
+        "The southern tip of Lake Michigan touches Indiana. What does the shape of the lake suggest about which way the ice moved?"
+      ]
+    }
+  ]
+}

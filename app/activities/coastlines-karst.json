@@ -1,0 +1,99 @@
+{
+  "title": "Coastlines and karst",
+  "minutes": 20,
+  "summary": "How waves, sea level, coral and dissolving rock shape the land.",
+  "order": 26,
+  "standards": [],
+  "stops": [
+    {
+      "title": "Islands made of sand",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -75.9,
+        "lat": 35.4,
+        "range": 320000,
+        "pitch": -90
+      },
+      "text": "Waves and currents move sand along a coast. In some places they pile it into long, thin islands that run beside the shore. These are called barrier islands. The calm water between the islands and the mainland is called a sound or a lagoon.\n\nThese are the Outer Banks of North Carolina. Storms move the sand, so the islands slowly change shape and position.",
+      "questions": [
+        "Use the ↔ measure button. How long is the chain of islands? How wide is an island at a typical spot?",
+        "Why is a barrier island a risky place to build a house?"
+      ]
+    },
+    {
+      "title": "A drowned river valley",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -76.3,
+        "lat": 38.1,
+        "range": 520000,
+        "pitch": -90
+      },
+      "text": "During the last ice age, so much water was frozen in ice sheets that the sea was about 120 meters lower than it is today. Rivers flowed across land that is now under water.\n\nWhen the ice melted, the sea rose and flooded the river valleys. Chesapeake Bay is the flooded valley of the Susquehanna River and the rivers that joined it.",
+      "questions": [
+        "The bay has a shape like the branches of a tree. Explain why.",
+        "If sea level rises more, what will happen to the shape of the bay?"
+      ]
+    },
+    {
+      "title": "Land built by living things",
+      "body": "earth",
+      "base": "s2",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -151.74,
+        "lat": -16.5,
+        "range": 38000,
+        "pitch": -90
+      },
+      "text": "Corals are tiny sea animals that build hard skeletons of limestone. Over thousands of years their skeletons pile up into a reef. Corals need warm, shallow, sunlit water, so reefs grow around the edges of tropical islands.\n\nThis is Bora Bora in the Pacific. The island in the middle is an old volcano. The ring around it is a coral reef, with a shallow lagoon in between.\n\nOld volcanic islands slowly sink and wear away, but the reef keeps growing upward.",
+      "questions": [
+        "Describe the reef and the lagoon. What colors show shallow water and deep water?",
+        "Predict what this place will look like after the island in the middle has sunk below the sea."
+      ]
+    },
+    {
+      "title": "Land that dissolves",
+      "body": "earth",
+      "base": "usgs",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -81.6,
+        "lat": 27.95,
+        "range": 70000,
+        "pitch": -90
+      },
+      "text": "Rainwater is very slightly acid. Over a long time it can dissolve limestone. Water seeping through cracks widens them into caves. When the roof of a cave falls in, it leaves a round hole at the surface called a sinkhole.\n\nLand shaped this way is called karst. Central Florida sits on limestone, and many of its lakes are sinkholes filled with water.",
+      "questions": [
+        "Describe the shape of the lakes here. How is that shape evidence for sinkholes?",
+        "Why does karst form in limestone and not in a rock like granite?"
+      ]
+    },
+    {
+      "title": "Karst close to home",
+      "body": "earth",
+      "base": "usgs",
+      "layers": [],
+      "terrain": false,
+      "view": {
+        "lon": -86.44,
+        "lat": 38.7,
+        "range": 7000,
+        "pitch": -90
+      },
+      "text": "Southern Indiana has some of the best karst in the United States. Around Mitchell and Orleans the land is dotted with thousands of sinkholes. Streams sink into the ground and flow through caves. The Lost River disappears underground and runs for miles before it comes back to the surface.\n\nThis photo shows farmland just south of Mitchell. Many of the small clumps of trees in the fields grow in sinkholes, where the ground dips too steeply to plow.\n\nTo find out what rock lies under this land, open the Controls tab, switch on Geologic map, and click the map.",
+      "questions": [
+        "Count the small clumps of trees in one large field. About how many sinkholes might that be?",
+        "Switch on the geologic map and click in a few places. What kind of rock is the bedrock here? Why does that rock matter for sinkholes?"
+      ]
+    }
+  ]
+}

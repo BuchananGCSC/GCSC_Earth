@@ -1,16 +1,46 @@
 {
   "activities": [
     {
+      "id": "plate-boundaries",
+      "title": "Plate boundaries",
+      "minutes": 20,
+      "summary": "Three ways plates meet, and how to tell them apart."
+    },
+    {
       "id": "volcanoes-hotspots",
       "title": "Volcanoes and hotspots",
       "minutes": 20,
       "summary": "Why volcanoes are where they are."
     },
     {
+      "id": "mountains-rifts",
+      "title": "Mountains and rifts",
+      "minutes": 20,
+      "summary": "How squeezing and stretching the crust shape the land."
+    },
+    {
       "id": "rocks-geologic-maps",
       "title": "Rocks and geologic maps",
       "minutes": 20,
       "summary": "Read a geologic map, starting in Indiana."
+    },
+    {
+      "id": "rivers-deltas",
+      "title": "Rivers and deltas",
+      "minutes": 20,
+      "summary": "How rivers wear land away in one place and build it in another."
+    },
+    {
+      "id": "glaciers-ice-sheets",
+      "title": "Glaciers and ice sheets",
+      "minutes": 20,
+      "summary": "How moving ice carves and builds the land, including Indiana."
+    },
+    {
+      "id": "coastlines-karst",
+      "title": "Coastlines and karst",
+      "minutes": 20,
+      "summary": "How waves, sea level, coral and dissolving rock shape the land."
     },
     {
       "id": "other-worlds",

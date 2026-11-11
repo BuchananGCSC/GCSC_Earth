@@ -166,7 +166,10 @@ h2.act-title { font-size: 17px; text-transform: none; letter-spacing: 0; color: 
 #nav button { width: 38px; height: 38px; border-radius: var(--radius); border: 1px solid var(--line);
   background: rgba(19,33,42,.92); font-size: 18px; line-height: 1; }
 #nav button:hover { border-color: var(--accent); }
-#nav .gap { height: 6px; }
+#nav .cap { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; text-align: center; color: var(--text);
+  margin-top: 6px; text-shadow: 0 0 3px #000, 0 0 6px #000; pointer-events: none; }
+#nav .cap:first-child { margin-top: 0; }
+#nav button[data-nav^="tilt"] { font-size: 13px; }
 
 #readout { position: absolute; left: 12px; bottom: 28px; z-index: 4; background: rgba(11,20,24,.8);
   padding: 4px 8px; border-radius: 6px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; pointer-events: none; }
