@@ -15,7 +15,10 @@ A browser globe for **intro-level Earth/space science students** to study geolog
 - **Shared links** carry the body, camera view, layers and (if one is open) the activity and stop in the URL hash.
 - **Browser storage is minimal:** "hint dismissed" (localStorage) and the student's in-progress activity answers and name (sessionStorage, cleared when the tab closes, so a reload does not lose work). Answers leave the browser only when the student copies or downloads them.
 - **Place search on Earth sends the typed text to OpenStreetMap Nominatim.** This is the one thing a student types that leaves the browser; the page says so next to the search box. Moon and Mars search a built-in list.
-- **Activities are topic-based** JSON files in `app/activities/`, listed in `index.json`, each with an empty `standards` field for later Indiana/NGSS alignment. Format: `docs/activities.md`. New activities need no code changes.
+- **Activities are topic-based** JSON files in `app/activities/`, listed in `index.json`, each with an empty `standards` field for later Indiana/NGSS alignment. Format: `docs/activities.md`. New activities need no code changes. On screen they are called "lessons".
+- **Teachers author lessons in the built-in editor** (`/editor/`, which is the app with `?edit`; code in `app/editor.js`, loaded only then). It captures the globe's state as a stop and downloads the lesson file; the teacher uploads it to `app/activities/` on GitHub. Guide: `docs/lesson-editor.md`. The editor's draft lives in localStorage.
+- **Lessons can travel in a link** (`#lesson=1.<data>`: the lesson JSON, deflate-compressed, base64url). Made by the editor's "Copy a link" button, they run without being published. Their content is untrusted: `cleanLesson()` cuts it to size, it is rendered as plain text only, and the panel labels it "Lesson from a link".
+- **The lesson list is generated:** `scripts/build-activity-index.py` writes `index.json` from the lesson files, during the Pages deploy and by hand for local testing. Unreadable files are skipped with a warning.
 - Never commit API tokens (the Phase 0 page takes a Cesium ion token pasted in at run time).
 - **Student-facing wording is intro level:** plain names for layers, one sentence on what each shows.
 

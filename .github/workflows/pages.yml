@@ -30,6 +30,8 @@ jobs:
           mkdir -p _site
           cp -r app/. _site/
           cp -r phase0 _site/phase0
+          # The lesson list is built from the lesson files, so adding a lesson is adding one file.
+          python3 scripts/build-activity-index.py _site/activities
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

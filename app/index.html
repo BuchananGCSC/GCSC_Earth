@@ -18,6 +18,7 @@
     <div class="tabs" role="tablist" aria-label="Panel">
       <button type="button" role="tab" id="tab-lesson" aria-controls="pane-lesson" aria-selected="false" tabindex="-1">Lesson</button>
       <button type="button" role="tab" id="tab-controls" aria-controls="pane-controls" aria-selected="true">Controls <span id="tab-count" class="badge" hidden></span></button>
+      <button type="button" role="tab" id="tab-editor" aria-controls="pane-editor" aria-selected="false" tabindex="-1" hidden>Editor</button>
     </div>
 
     <div id="pane-lesson" class="pane" role="tabpanel" aria-labelledby="tab-lesson" hidden>
@@ -93,6 +94,7 @@
 
       <p class="fine credits-note">Map data credits appear at the bottom of the globe.</p>
     </div>
+    <div id="pane-editor" class="pane pane-scroll" role="tabpanel" aria-labelledby="tab-editor" hidden></div>
   </aside>
 
   <main id="stage">

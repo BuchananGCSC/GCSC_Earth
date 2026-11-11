@@ -28,6 +28,8 @@
   const state = { body: 'earth', base: null, overlays: new Map(), terrain: false, quality: 'lite', view: null };
   // An activity named in the link, waiting to be opened: { id, stop (1-based), keepView }.
   let linkActivity = null;
+  // A whole lesson packed into the link (made in the lesson editor): { data, stop, keepView }.
+  let linkLesson = null;
 
   const world = () => WORLDS[state.body];
   const byId = (list, id) => list.find((x) => x.id === id);
@@ -53,6 +55,9 @@
       ? { lon: clamp(v[0], -180, 180), lat: clamp(v[1], -90, 90), height: clamp(v[2], 100, 1e9), heading: v[3], pitch: clamp(v[4], -90, 90) }
       : null;
     const actId = p.get('act') || '';
+    const packed = p.get('lesson') || '';
+    linkLesson = /^[01]\.[A-Za-z0-9_-]{1,60000}$/.test(packed)
+      ? { data: packed, stop: Math.max(1, parseInt(p.get('stop'), 10) || 1), keepView: !!state.view } : null;
     linkActivity = /^[a-z0-9-]{1,60}$/.test(actId)
       ? { id: actId, stop: Math.max(1, parseInt(p.get('stop'), 10) || 1), keepView: !!state.view } : null;
   }
@@ -70,7 +75,8 @@
     }
     if (state.terrain) p.push('terrain=1');
     if (state.quality === 'full') p.push('q=full');
-    if (act.def) p.push('act=' + act.def.id, 'stop=' + (act.i + 1));
+    if (act.def && act.def.packed) p.push('stop=' + (act.i + 1), 'lesson=' + act.def.packed);
+    else if (act.def && !act.def.preview) p.push('act=' + act.def.id, 'stop=' + (act.i + 1));
     return '#' + p.join('&');
   }
 
@@ -685,7 +691,95 @@
     try { def = await getJson(APP.activitiesIndex.replace(/[^/]*$/, '') + id + '.json'); }
     catch (e) { banner('That lesson could not be loaded. Check the internet connection.'); return; }
     if (!def || !Array.isArray(def.stops) || !def.stops.length) { banner('That lesson has no stops yet.'); return; }
-    act.def = Object.assign({}, def, { id });
+    openLesson(Object.assign({}, def, { id }), stopNo, keepView);
+  }
+
+  /* A lesson can travel inside a link, so a teacher can use one without adding it to the site.
+     The link holds the lesson file, compressed and written in URL-safe letters:
+       #lesson=1.<data>   compressed (deflate)      #lesson=0.<data>   not compressed
+     Everything in such a link is treated as untrusted text: it is cut to size, shown only as
+     plain text, and labeled on screen as coming from a link. */
+  const b64url = {
+    encode(bytes) {
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    },
+    decode(text) {
+      const bin = atob(text.replace(/-/g, '+').replace(/_/g, '/'));
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    },
+  };
+  async function throughStream(bytes, stream, limit) {
+    const reader = new Blob([bytes]).stream().pipeThrough(stream).getReader();
+    const parts = []; let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > limit) { reader.cancel(); throw new Error('too big'); }
+      parts.push(value);
+    }
+    const out = new Uint8Array(total); let at = 0;
+    for (const part of parts) { out.set(part, at); at += part.length; }
+    return out;
+  }
+  const PACK_LIMIT = 400000;           // most text a packed lesson may unpack to
+  async function packLesson(def) {
+    const bytes = new TextEncoder().encode(JSON.stringify(def));
+    if (typeof CompressionStream === 'function') {
+      try { return '1.' + b64url.encode(await throughStream(bytes, new CompressionStream('deflate-raw'), PACK_LIMIT)); } catch (e) { /* fall through */ }
+    }
+    return '0.' + b64url.encode(bytes);
+  }
+  async function unpackLesson(data) {
+    let bytes = b64url.decode(data.slice(2));
+    if (data[0] === '1') {
+      if (typeof DecompressionStream !== 'function') throw new Error('old browser');
+      bytes = await throughStream(bytes, new DecompressionStream('deflate-raw'), PACK_LIMIT);
+    }
+    return cleanLesson(JSON.parse(new TextDecoder().decode(bytes)));
+  }
+  // Keep only what a lesson needs, as plain text of sensible length.
+  function cleanLesson(obj) {
+    if (!obj || typeof obj !== 'object' || !Array.isArray(obj.stops) || !obj.stops.length) return null;
+    const text = (v, max) => String(v == null ? '' : v).slice(0, max);
+    const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+    return {
+      title: text(obj.title, 120) || 'Untitled lesson',
+      stops: obj.stops.slice(0, 40).map((st) => {
+        st = st && typeof st === 'object' ? st : {};
+        const v = st.view && typeof st.view === 'object' ? st.view : {};
+        return {
+          title: text(st.title, 120), body: text(st.body, 20), base: text(st.base, 20),
+          layers: (Array.isArray(st.layers) ? st.layers : []).slice(0, 6).map((x) => text(x, 20)),
+          terrain: !!st.terrain,
+          view: { lon: n(v.lon), lat: n(v.lat), range: n(v.range), pitch: n(v.pitch), heading: n(v.heading) },
+          text: text(st.text, 6000),
+          questions: (Array.isArray(st.questions) ? st.questions : []).slice(0, 12).map((q) => text(q, 600)),
+        };
+      }),
+    };
+  }
+  async function openPackedLesson(link) {
+    let def;
+    try { def = await unpackLesson(link.data); }
+    catch (e) {
+      banner(e && e.message === 'old browser' ? 'This browser is too old to open a lesson from a link. Try a newer browser.'
+        : 'That lesson link is damaged or incomplete. Ask for the link again.', true);
+      return;
+    }
+    if (!def) { banner('That lesson link is damaged or incomplete. Ask for the link again.', true); return; }
+    let hash = 5381;                                  // a short fingerprint, so answers belong to this exact lesson
+    for (let i = 0; i < link.data.length; i++) hash = (hash * 33 + link.data.charCodeAt(i)) >>> 0;
+    openLesson(Object.assign(def, { id: 'link-' + hash.toString(36), packed: link.data }), link.stop, link.keepView);
+  }
+
+  // Run a lesson that is already in memory (a published one, or a draft being previewed in the editor).
+  function openLesson(def, stopNo, keepView) {
+    act.def = def;
     act.i = clamp(stopNo - 1, 0, def.stops.length - 1); act.review = false;
     $('#app').classList.add('in-activity');
     $('#act-panel').hidden = false; $('#act-bar').hidden = false;
@@ -695,15 +789,17 @@
   }
 
   function leaveActivity() {
+    const wasPreview = !!(act.def && act.def.preview);
     act.def = null; act.review = false;
     $('#app').classList.remove('in-activity');
     $('#act-panel').hidden = true; $('#act-bar').hidden = true;
     renderAll(); writeLink();
+    if (wasPreview) setTab('editor', true);
   }
 
   // Put the globe the way the current stop asks: world, picture, layers, terrain, view.
-  function applyStop() {
-    const st = act.def.stops[act.i];
+  function applyStop() { applyStopDef(act.def.stops[act.i]); }
+  function applyStopDef(st) {
     const body = WORLDS[st.body] ? st.body : state.body, w = WORLDS[body];
     const base = byId(w.base, st.base) ? st.base : (body === state.body ? state.base : w.base[0].id);
     const wanted = new Map();
@@ -735,6 +831,28 @@
     writeLink();
   }
 
+  // The globe as it is right now, in the form a lesson stop stores it. Used by the lesson editor.
+  function captureStop() {
+    const o = orbitState();
+    const r3 = (v) => Math.round(v * 1000) / 1000;
+    let view;
+    if (o) {
+      const c = C.Cartographic.fromCartesian(o.target, ell);
+      view = { lon: r3(deg(c.longitude)), lat: r3(deg(c.latitude)), range: Number(o.range.toPrecision(3)),
+        pitch: clamp(Math.round(deg(o.pitch)), -90, -10) };
+      const heading = ((Math.round(deg(o.heading)) % 360) + 360) % 360;
+      if (heading) view.heading = heading;
+    } else {                                           // the middle of the screen is empty space: store a whole-globe view
+      const c = viewer.camera.positionCartographic;
+      view = { lon: r3(deg(c.longitude)), lat: r3(deg(c.latitude)), range: null, pitch: -90 };
+    }
+    return {
+      body: state.body, base: state.base,
+      layers: [...state.overlays].map(([id, op]) => byId(world().overlays, id).opacity ? `${id}.${op}` : id),
+      terrain: state.terrain, view,
+    };
+  }
+
   function answersText() {
     const d = act.def, mine = myAnswers(), out = [];
     out.push(`Geoscience Globe: ${d.title}`);
@@ -754,7 +872,7 @@
     const body = $('#act-body'); body.textContent = '';
     $('#act-msg').textContent = ''; $('#act-export').hidden = true;
     if (act.review) {
-      $('#act-progress').textContent = d.title;
+      $('#act-progress').textContent = (d.preview ? 'Preview · ' : d.packed ? 'Lesson from a link · ' : '') + d.title;
       $('#act-title').textContent = 'Your answers';
       body.append(el('p', { text: 'Check your answers. Then copy or download them and hand them in the way your teacher asked.' }));
       body.append(el('p', { class: 'q', text: 'Your name' }),
@@ -772,7 +890,7 @@
         el('button', { type: 'button', text: 'Download my answers', onclick: downloadAnswers })));
     } else {
       const st = d.stops[act.i];
-      $('#act-progress').textContent = `${d.title} · Stop ${act.i + 1} of ${n}`;
+      $('#act-progress').textContent = `${d.preview ? 'Preview · ' : d.packed ? 'Lesson from a link · ' : ''}${d.title} · Stop ${act.i + 1} of ${n}`;
       $('#act-title').textContent = st.title || `Stop ${act.i + 1}`;
       for (const para of String(st.text || '').split(/\n\s*\n/)) if (para.trim()) body.append(el('p', { text: para.trim() }));
       questionsOf(st).forEach((q, qi) => {
@@ -989,7 +1107,7 @@
   function share() {
     if (viewer) captureView();
     writeLink();
-    const url = location.href, msg = $('#share-msg'), box = $('#share-url');
+    const url = location.origin + location.pathname + location.hash, msg = $('#share-msg'), box = $('#share-url');   // leaves out ?edit
     const fallback = () => {
       box.hidden = false; box.value = url; box.focus(); box.select();
       msg.textContent = 'Copy the link in the box below (Command + C).';
@@ -1004,9 +1122,11 @@
 
   // The panel has two tabs: Lesson (reading and questions) and Controls (everything that changes the globe).
   const ui = { tab: 'controls' };
+  const TABS = ['lesson', 'controls', 'editor'];       // the Editor tab only appears on the editor page (?edit)
+  const tabShown = (t) => !$('#tab-' + t).hidden;
   function setTab(name, focus) {
-    ui.tab = name === 'lesson' ? 'lesson' : 'controls';
-    for (const t of ['lesson', 'controls']) {
+    ui.tab = TABS.includes(name) && tabShown(name) ? name : 'controls';
+    for (const t of TABS) {
       const on = t === ui.tab, tab = $('#tab-' + t);
       tab.setAttribute('aria-selected', String(on));
       tab.tabIndex = on ? 0 : -1;
@@ -1048,7 +1168,10 @@
     $('#tab-lesson').addEventListener('click', () => setTab('lesson'));
     $('#tab-controls').addEventListener('click', () => setTab('controls'));
     $('.tabs').addEventListener('keydown', (ev) => {
-      if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { ev.preventDefault(); setTab(ui.tab === 'lesson' ? 'controls' : 'lesson', true); }
+      if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+      ev.preventDefault();
+      const shown = TABS.filter(tabShown), at = shown.indexOf(ui.tab);
+      setTab(shown[(at + (ev.key === 'ArrowRight' ? 1 : shown.length - 1)) % shown.length], true);
     });
     $('#hint-close').addEventListener('click', () => {
       $('#hint').hidden = true;
@@ -1063,7 +1186,8 @@
     window.addEventListener('hashchange', () => {
       if (location.hash === lastWritten) return;
       readLink(); renderAll(); buildViewer();
-      if (linkActivity) startActivity(linkActivity.id, linkActivity.stop, linkActivity.keepView);
+      if (linkLesson) openPackedLesson(linkLesson);
+      else if (linkActivity) startActivity(linkActivity.id, linkActivity.stop, linkActivity.keepView);
       else if (act.def) leaveActivity();
       else writeLink();
     });
@@ -1085,13 +1209,24 @@
       return;
     }
     await loadActivities();
-    if (linkActivity) await startActivity(linkActivity.id, linkActivity.stop, linkActivity.keepView);
+    if (linkLesson) await openPackedLesson(linkLesson);
+    else if (linkActivity) await startActivity(linkActivity.id, linkActivity.stop, linkActivity.keepView);
+    // The editor page is this same page with ?edit added. Students never load the editor code.
+    if (new URLSearchParams(location.search).has('edit')) {
+      const s = el('script', { src: 'editor.js' });
+      s.onerror = () => banner('The lesson editor could not be loaded.');
+      document.head.append(s);
+    }
     writeLink();
     if (!seen) { $('#hint').hidden = false; $('#hint-close').focus(); }
   }
 
-  // For testing from the browser console.
-  window.geoGlobe = { get viewer() { return viewer; }, state };
+  // For testing from the browser console, and for the lesson editor (editor.js).
+  window.geoGlobe = {
+    get viewer() { return viewer; }, state,
+    api: { el, clamp, banner, getJson, setTab, captureStop, applyStopDef, openLesson, packLesson,
+      get lessons() { return actIndex; }, get ready() { return !!viewer; } },
+  };
 
   start();
 })();

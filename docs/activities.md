@@ -1,4 +1,7 @@
-# Writing an activity
+# The lesson file format
+
+Most people should use the lesson editor instead of editing files: see [lesson-editor.md](lesson-editor.md).
+This page describes the file the editor produces.
 
 An activity is a guided tour: a list of stops, each with a view of the globe, a short reading and one or
 more questions. Activities are plain JSON files in `app/activities/`. Adding one needs no code changes.
@@ -8,8 +11,8 @@ more questions. Activities are plain JSON files in `app/activities/`. Adding one
 1. Copy an existing file in `app/activities/`, for example `volcanoes-hotspots.json`, and rename it.
    The file name (without `.json`) is the activity's id. Use lowercase letters, numbers and hyphens only.
 2. Edit the stops.
-3. Add an entry to `app/activities/index.json` with the same `id`, plus the `title`, `minutes` and `summary`
-   shown in the Activities list.
+3. That is all for the live site: the lesson list (`index.json`) is rebuilt from the files each time the site is
+   published. To see the new lesson when running the site locally, run `python3 scripts/build-activity-index.py`.
 
 A link straight to an activity looks like `https://buchanangcsc.github.io/GCSC_Earth/#act=volcanoes-hotspots`.
 Add `&stop=3` to open at the third stop.
@@ -21,6 +24,7 @@ Add `&stop=3` to open at the third stop.
   "title": "Volcanoes and hotspots",
   "minutes": 20,
   "summary": "Why volcanoes are where they are.",
+  "order": 10,
   "standards": [],
   "stops": [
     {
@@ -39,6 +43,7 @@ Add `&stop=3` to open at the third stop.
 
 | Field | Meaning |
 |---|---|
+| `order` | Place in the lesson list; lower numbers come first. Optional (default 100). |
 | `standards` | Empty for now. A place to list Indiana or NGSS standards later. The app does not show it. |
 | `body` | `earth`, `moon` or `mars`. |
 | `base` | The picture. Earth: `bm` (Earth from space), `s2` (sharper satellite), `usgs` (aerial photos), `modis` (a few days ago). Moon: `lro`, `lola` (heights in color). Mars: `viking`, `mola` (heights in color). |

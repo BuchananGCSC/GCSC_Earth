@@ -31,6 +31,9 @@ const APP = {
   // The list of activities (guided tours). Each activity is its own JSON file; see docs/activities.md.
   activitiesIndex: 'activities/index.json',
 
+  // Lesson editor (the site with ?edit added): where a saved lesson file is uploaded to publish it.
+  lessonUploadUrl: 'https://github.com/BuchananGCSC/GCSC_Earth/upload/main/app/activities',
+
   // Quality settings. "lite" matches what was benchmarked on the student laptops.
   quality: {
     lite: { label: 'Lite',    pixelRatio: 1,   detail: 4, atmosphere: false, antialias: false, tileCache: 60 },
